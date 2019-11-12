@@ -1,6 +1,6 @@
 """
     File: trapezoidal_map.py
-    Authors: Jacob Cozzarin and <ADD YOUR NAME HERE>
+    Authors: Jacob Cozzarin and William Carver
 
     Description: Trapezoidal map construction and planar point location implementation
 """
