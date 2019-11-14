@@ -33,6 +33,42 @@ def cli_point_locate_prompt(trap_map):
 
 def construct_trapezoidal_map(lines, bound_box):
     # TODO
+    # Data Structures:
+        # Vertices need bullet info as well as the actual point data:
+        # - Vertice of segment
+        # - Top bullet path SEGMENT (vertice -> first intersection)
+        # - Bottom bullet path SEGMENT (vertice -> first intersection)
+        
+        # Trapezoid is made up of:
+        # - Top Segment
+        # - Bottom Segment
+        # - Bounding vertex on the left
+        # - Bounding vertex on the right
+
+        # X Internal Node (P NODE):
+        # - Point p (endpoint of one line segment)
+        # - Top bullet path SEGMENT (vertice -> segment above)
+        # - Bottom bullet path SEGMENT (vertice -> segment below)
+        # - Two children: 
+        #   - Left: point that lies to the left of the vertical line passying through p
+        #   - Right: point that lies to the right of the vertical line passying through p
+
+        # Y Internal Node (S NODE):
+        # - Line segment s
+        # - Two children:
+        #   - Left: anything ABOVE the line segment
+        #   - Right: anything BELOW the line segment
+
+    # ALGORITHM:
+    # Insert new segment:
+    # - Parse tree (point location with start point) until you get to a trapezoid (replaced with the start of the segment)
+    #   - Case P NODE:
+    #       - Check if point is to the left or right, take the appropriate child
+    #   - Case Y NODE:
+    #       - Check if point is above or below, take the appropriate child
+    #   - Case Trapezoid:
+    #       - Done, this is where we place the start point of the line segment
+    # - Repeat above process for end point of segment
     return []
 
 def locate_point(point, trap_map):
