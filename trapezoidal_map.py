@@ -9,6 +9,36 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
+def cli_point_locate_prompt(trap_map):
+    exit_commands = ["quit", "q", "exit", "e"]
+    while True:
+        # Parse input
+        try:
+            input_val = input("Enter a point (x y): ").strip()
+            if input_val not in exit_commands:
+                point = list(map(float, input_val.split(' ')))
+                if len(point) != 2:
+                    print("Error parsing point data, incorrect number of coordinates specified. Expected: x y")
+                else:
+                    result_path = locate_point(point, trap_map)
+                    print(result_path)
+            else:
+                break;
+        except Exception:
+            print("Error parsing point data, make sure x and y coordinates are valid numbers")
+        except KeyboardInterrupt:
+            break;
+    print("\nExiting point location prompt.")
+    return
+
+def construct_trapezoidal_map(lines, bound_box):
+    # TODO
+    return []
+
+def locate_point(point, trap_map):
+    # TODO
+    return []
+
 def set_figure_size(bounding_box):
     axes = plt.gca()
     axes.set_xlim([bounding_box[0][0], bounding_box[1][0]])
@@ -49,6 +79,9 @@ def main():
     if len(sys.argv) == 2:
         num_lines, bound_box, lines = parseInput(sys.argv[1])
         set_figure_size(bound_box)
+        trap_map = construct_trapezoidal_map(lines, bound_box)
+        # Begin CLI
+        cli_point_locate_prompt(trap_map)
         construct_map_plot(lines)
     else:
         print_usage()
