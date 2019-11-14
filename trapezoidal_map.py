@@ -4,6 +4,7 @@
 
     Description: Trapezoidal map construction and planar point location implementation
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
@@ -31,10 +32,26 @@ def construct_map_plot(lines):
 def print_usage():
     print("usage: python trapezoidal_map.py <fileName>")
 
-def main():
-    set_figure_size([[0, 0], [100, 100]])
-    construct_map_plot([[[5, 40], [55, 20]], [[30, 60], [70, 60]], [[60, 55], [95, 15]], [[40, 5], [95, 15]]])
+def parseInput(filename):
+    with open(filename) as f:
+        num_lines = int(f.readline().rstrip())
+        vals = [int(s) for s in str.split(f.readline().rstrip(), ' ')]
+        bound_box = [[vals[0], vals[1]],[vals[2], vals[3]]]
+        lines = []
+        for line in f:
+            if len(line) > 2:
+                vals = [int(s) for s in str.split(line.rstrip(), " ")]
+                lines.append( [[vals[0], vals[1]],[vals[2], vals[3]]] )
 
+    return num_lines, bound_box, lines
+
+def main():
+    if len(sys.argv) == 2:
+        num_lines, bound_box, lines = parseInput(sys.argv[1])
+        set_figure_size(bound_box)
+        construct_map_plot(lines)
+    else:
+        print_usage()
 
 if __name__ == "__main__":
     main()
