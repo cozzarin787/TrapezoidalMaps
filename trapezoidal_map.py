@@ -20,30 +20,6 @@ class Trapezoid:
         self.below_segment = below_seg
         self.parent = parent
 
-    def isLeftBoundingTrap(self):
-        if self.left_point == None:
-            return True
-        else:
-            return False
-
-    def isRightBoundingTrap(self):
-        if self.right_point == None:
-            return True
-        else:
-            return False
-
-    def isTopBoundingTrap(self):
-        if self.above_segment == None:
-            return True
-        else:
-            return False
-
-    def isBottomBoundingTrap(self):
-        if self.below_segment == None:
-            return True
-        else:
-            return False
-
 class Segment:
     def __init__(self, left_point, right_point, parent, next_seg):
         self.parent = parent
@@ -58,6 +34,12 @@ class Segment:
     def getY(self, x):
         return self.m*x + self.b
 
+    def replaceChild(self, oldChild, newChild):
+        if self.above == oldChild:
+            self.above = newChild
+        elif self.below == oldChild:
+            self.below = newChild
+
 
 class BeginPoint:
     bullet_upper = 100
@@ -69,6 +51,12 @@ class BeginPoint:
         self.right = None
         self.loc = [x, y]
         name = "P" + str(next_pt)
+    
+    def replaceChild(self, oldChild, newChild):
+        if self.left == oldChild:
+            self.left = newChild
+        elif self.right == oldChild:
+            self.right = newChild
 
 class EndPoint:
     bullet_upper = 100
@@ -80,6 +68,12 @@ class EndPoint:
         self.right = None
         self.loc = [x, y]
         name = "Q" + str(next_pt)
+    
+    def replaceChild(self, oldChild, newChild):
+        if self.left == oldChild:
+            self.left = newChild
+        elif self.right == oldChild:
+            self.right = newChild
 
 def cli_point_locate_prompt(trap_map):
     exit_commands = ["quit", "q", "exit", "e"]
@@ -110,26 +104,25 @@ def construct_trapezoidal_map(lines, bound_box):
     bb_bot_q = EndPoint(bound_box[1][0], bound_box[0][1], None, 0)
     bb_top_s = Segment(bb_top_p, bb_top_q, None, 0)
     bb_bot_s = Segment(bb_bot_p, bb_bot_q, None, 0)
-    trap_map = Trapezoid(bb_bot_p, bb_top_q, bb_top_s, bb_bot_s, None)
+    the_tree = Trapezoid(bb_bot_p, bb_top_q, bb_top_s, bb_bot_s, None)
 
     for line in lines:
         print("Adding " + str(line))
 
         # Get trapezoids that contain P and Q
-        t_p = locate_point(line[0], trap_map)
-        t_q = locate_point(line[1], trap_map)
+        t_p = locate_point(line[0], the_tree)
+        t_q = locate_point(line[1], the_tree)
 
-        next_point += 1 #update global counters
+        # Update global id counters
+        next_point += 1 
         next_segment += 1
 
-
-        
         # CASE 2: Both endpoints are in the same trapezoid
         if t_p == t_q:
             # P will be Q's parent
             p = BeginPoint(line[0][0], line[0][1], t_p.parent, next_point)
             q = BeginPoint(line[1][0], line[1][1], p, next_point)
-            s = Segment(p, q, None, next_segment)
+            s = Segment(p, q, q, next_segment)
 
             # Add trapezoid for P.left
             p.left = Trapezoid(t_p.left_point, p, t_p.above_segment, t_p.below_segment, p)
@@ -143,36 +136,61 @@ def construct_trapezoidal_map(lines, bound_box):
             # Add trapezoids for S left and right
             s.above = Trapezoid(p, q, t_p.above_segment, s, s)
             s.below = Trapezoid(p, q, s, t_p.below_segment, s)
-            
+
             if t_p == None:
                 # P is the new root
-                trap_map = p
+                the_tree = p
+            else:
+                # t_p's parent should abandon t_p and adopt p in its place...
+                t_p.parent.replaceChild(t_p, p)
         else:
-            # DO CASE 1 FOR BOTH ENDPOINTS
-            # P and Q have different parents
+            # CASE 1 FOR BOTH ENDPOINTS since P and Q have different parents
+            p = BeginPoint(line[0][0], line[0][1], t_p.parent, next_point)
             q = BeginPoint(line[1][0], line[1][1], t_q.parent, next_point)
 
             # Add segment for P.right
+            s = Segment(p, q, p, next_segment)
+            p.right = s
 
-            # TEST FOR CASE 3
+            # Add the new elements to the tree (at least for the ends, there might be more spots)
+
+
+
+            # Add Trapezoid for P.left
+            p.left = Trapezoid(t_p.right_point, p, t_p.above_segment, t_p.below_segment, p)
+
+            # Add Trapezoids for S.left and S.right
+            if isinstance(t_p.parent, BeginPoint) and t_p.parent.loc[1] >= s.getY(t_p.parent.loc[0]):
+                s.above = Trapezoid(p, t_p.parent, t_p.above_segment, s, s)
+                t_p.parent.bullet_lower = s.getY(t_p.parent.loc[0])
+                s.below = Trapezoid(p, findRightPointBelow(the_tree, s), t_p.above_segment, s, s)
+
+            elif isinstance(t_p.parent, BeginPoint) and t_p.parent.loc[1] < s.getY(t_p.parent.loc[0]):
+                s.above = Trapezoid(p, findRightPointAbove(the_tree, s), t_p.above_segment, s, s)
+                s.below =Trapezoid(p, t_p.parent, t_p.below_segment, s, s)
+                t_p.parent.bullet_upper = s.getY(t_p.parent.loc[0])
+
+            elif isinstance(t_p.parent, Segment) and p.loc[1] >= t_p.parent.getY(p.loc[0]):
+                s.above = Trapezoid(p, findRightPointAbove(the_tree, s), t_p.above_segment, s, s)
+                s.below = Trapezoid(p, t_p.right_point, s, t_p.below_segment)   # may need to add more to find right point
+            
+
+            # Add segment for Q.left
+            s = Segment(p, q, q, next_segment)
+            q.left = s
+
+            # Add Trapezoid for Q.right
+
+            # Add Trapezoids for S.left and S.right
+
+
+            # TEST FOR CASE 3   :(
 
         # Update bullet paths for P and Q
-        if t_p.isTopBoundingTrap():
-            p.bullet_upper = bound_box[1][1]
-        else:
-            p.bullet_upper = t_p.above_segment.getY(p.loc[0])
-        if t_q.isTopBoundingTrap():
-            q.bullet_upper = bound_box[1][1]
-        else:
-            q.bullet_upper = t_q.above_segment.getY(q.loc[0])
-        if t_p.isBottomBoundingTrap():
-            p.bullet_lower = bound_box[0][1]
-        else:
-            p.bullet_lower = t_p.below_segment.getY(p.loc[0])
-        if t_q.isBottomBoundingTrap():
-            q.bullet_lower = bound_box[0][1]
-        else:
-            q.bullet_lower = t_q.below_segment.getY(q.loc[0])
+        p.bullet_upper = t_p.above_segment.getY(p.loc[0])
+        q.bullet_upper = t_q.above_segment.getY(q.loc[0])
+        p.bullet_lower = t_p.below_segment.getY(p.loc[0])
+        q.bullet_lower = t_q.below_segment.getY(q.loc[0])
 
 
 
@@ -187,6 +205,70 @@ def construct_trapezoidal_map(lines, bound_box):
     #       - Done, this is where we place the start point of the line segment
     # - Repeat above process for end point of segment
     return []
+
+
+def findRightPointAbove(cur, seg):    
+    # ANY POINT IS FAIR GAME
+    if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
+        # if p.x < pi.x
+        if seg.p.loc[0] < cur.loc[0]:
+            findRightPointAbove(cur.right, seg)
+        elif cur == seg.q:
+            return seg.q
+        elif cur == seg.p:
+            return None
+        else:
+            l = findRightPointAbove(cur.right, seg)
+            r = findRightPointAbove(cur.left, seg)
+            if cur.loc[1] > seg.getY(cur.loc[0]): #if cur is above seg include it
+                return leftMostPoint(l, r, cur)
+            else:   # otherwise just check l and r
+                return leftMostPoint(l, r)
+    elif isinstance(cur, Segment):
+        if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
+            findRightPointAbove(cur.above, seg)
+        else:
+            findRightPointAbove(cur.below, seg)
+    else:
+        # cur is a trapezoid, ignore it
+        return None
+
+
+def findRightPointBelow(cur, seg):    
+    # ANY POINT IS FAIR GAME
+    if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
+        # if p.x > pi.x
+        if seg.p.loc[0] > cur.loc[0]:
+            findRightPointBelow(cur.right, seg)
+        elif cur == seg.q:
+            return seg.q
+        elif cur == seg.p:
+            return None
+        else:
+            l = findRightPointBelow(cur.right, seg)
+            r = findRightPointBelow(cur.left, seg)
+            if cur.loc[1] < seg.getY(cur.loc[0]): #if cur is below seg include it
+                return leftMostPoint(l, r, cur)
+            else:   # otherwise just check l and r
+                return leftMostPoint(l, r)
+    elif isinstance(cur, Segment):
+        if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
+            findRightPointBelow(cur.above, seg)
+        else:
+            findRightPointBelow(cur.below, seg)
+    else:
+        # cur is a trapezoid, ignore it
+        return None
+
+
+def leftMostPoint(left, right, cur = None):
+    bestPoint = left
+    if (not right is None) and (bestPoint.loc[0] < right.loc[0]):
+        bestPoint = right
+    if (not cur is None) and (bestPoint.loc[0] < cur.loc[0]):
+        bestPoint = cur
+    return bestPoint
+
 
 def locate_point(point, trap_map):
     if trap_map == None:
