@@ -313,8 +313,12 @@ def add_line_to_plot(line):
     plt.plot([line.p.loc[0], line.q.loc[0]], [line.p.loc[1], line.q.loc[1]], 'b-')
 
 def add_point_and_bullets_to_plot(point):
-    plt.axvline(x=point.loc[0], linestyle="--", color="tab:orange")
+    # point
     plt.plot(point.loc[0], point.loc[1], 'bo', markersize=3)
+     # upper bullet
+    plt.plot([point.loc[0], point.loc[0]], [point.loc[1], point.bullet_upper], linestyle="--", color="tab:orange")
+    # lower bullet
+    plt.plot([point.loc[0], point.loc[0]], [point.loc[1], point.bullet_lower], linestyle="--", color="tab:orange")
 
 def create_plot_from_trap_map(trap_map, line_set):
     if isinstance(trap_map, BeginPoint) or isinstance(trap_map, EndPoint):
