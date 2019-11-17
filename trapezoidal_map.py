@@ -69,8 +69,6 @@ class BeginPoint:
 class EndPoint:
     bullet_upper = 100
     bullet_lower = 0
-    loc = []
-    name = ""
 
     def __init__(self, x, y):
         self.loc = [x, y]
