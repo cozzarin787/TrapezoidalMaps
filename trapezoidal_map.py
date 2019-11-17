@@ -9,6 +9,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
+class Trapezoid:
+    def __init__(self, left_p, right_p, above_seg, below_seg):
+        self.left_point = left_p
+        self.right_point = right_p
+        self.above_segment = above_seg
+        self.below_segment = below_seg
+
+    def isLeftBoundingTrap(self):
+        if self.left_point == None:
+            return True
+        else:
+            return False
+
+    def isRightBoundingTrap(self):
+        if self.right_point == None:
+            return True
+        else:
+            return False
+
+    def isTopBoundingTrap(self):
+        if self.above_segment == None:
+            return True
+        else:
+            return False
+
+    def isBottomBoundingTrap(self):
+        if self.below_segment == None:
+            return True
+        else:
+            return False
+
 def cli_point_locate_prompt(trap_map):
     exit_commands = ["quit", "q", "exit", "e"]
     while True:
@@ -107,7 +138,10 @@ def parseInput(filename):
         for line in f:
             if len(line) > 2:
                 vals = [int(s) for s in str.split(line.rstrip(), " ")]
-                lines.append( [[vals[0], vals[1]],[vals[2], vals[3]]] )
+                if vals[0] < vals[2]:
+                    lines.append( [[vals[0], vals[1]], [vals[2], vals[3]]] )
+                else:
+                    lines.append( [[vals[2], vals[3]], [vals[0], vals[1]]] )
 
     return num_lines, bound_box, lines
 
