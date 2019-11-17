@@ -127,7 +127,7 @@ def construct_trapezoidal_map(lines, bound_box):
         if t_p == t_q:
             # P will be Q's parent
             p = BeginPoint(line[0][0], line[0][1], t_p.parent, next_point)
-            q = BeginPoint(line[1][0], line[1][1], p, next_point)
+            q = EndPoint(line[1][0], line[1][1], p, next_point)
             s = Segment(p, q, q, next_segment)
 
             # Add trapezoid for P.left
@@ -162,8 +162,6 @@ def construct_trapezoidal_map(lines, bound_box):
             p.right = s
 
             # Add the new elements to the tree (at least for the ends, there might be more spots)
-
-
 
             # Add Trapezoid for P.left
             p.left = Trapezoid(t_p.right_point, p, t_p.above_segment, t_p.below_segment, p)
@@ -201,18 +199,6 @@ def construct_trapezoidal_map(lines, bound_box):
         p.bullet_lower = t_p.below_segment.getY(p.loc[0])
         q.bullet_lower = t_q.below_segment.getY(q.loc[0])
 
-
-
-    # ALGORITHM:
-    # Insert new segment:
-    # - Parse tree (point location with start point) until you get to a trapezoid (replaced with the start of the segment)
-    #   - Case P NODE:
-    #       - Check if point is to the left or right, take the appropriate child
-    #   - Case Y NODE:
-    #       - Check if point is above or below, take the appropriate child
-    #   - Case Trapezoid:
-    #       - Done, this is where we place the start point of the line segment
-    # - Repeat above process for end point of segment
     return the_tree
 
 
