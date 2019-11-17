@@ -172,7 +172,7 @@ def construct_trapezoidal_map(lines, bound_box):
 
             elif isinstance(t_p.parent, Segment) and p.loc[1] >= t_p.parent.getY(p.loc[0]):
                 s.above = Trapezoid(p, findRightPointAbove(the_tree, s), t_p.above_segment, s, s)
-                s.below = Trapezoid(p, t_p.right_point, s, t_p.below_segment)   # may need to add more to find right point
+                s.below = Trapezoid(p, t_p.right_point, s, t_p.below_segment, s)   # may need to add more to find right point
             
 
             # Add segment for Q.left
