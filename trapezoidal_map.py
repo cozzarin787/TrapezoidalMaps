@@ -51,12 +51,18 @@ class Segment:
         self.below = None
         self.p = left_point
         self.q = right_point
-        name = "S" + str(next_seg)
+        self.name = "S" + str(next_seg)
         self.m = (self.q.y - self.p.y) / (self.q.x - self.p.x)
         self.b = (self.p.y - (self.p.x * self.m))
 
     def getY(self, x):
         return self.m*x + self.b
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.name == other.name
+        else:
+            return False
 
 
 class BeginPoint:
@@ -68,7 +74,7 @@ class BeginPoint:
         self.left = None
         self.right = None
         self.loc = [x, y]
-        name = "P" + str(next_pt)
+        self.name = "P" + str(next_pt)
 
 class EndPoint:
     bullet_upper = 100
@@ -79,7 +85,7 @@ class EndPoint:
         self.left = None
         self.right = None
         self.loc = [x, y]
-        name = "Q" + str(next_pt)
+        self.name = "Q" + str(next_pt)
 
 def cli_point_locate_prompt(trap_map):
     exit_commands = ["quit", "q", "exit", "e"]
@@ -175,16 +181,29 @@ def set_figure_size(bounding_box):
     axes.set_xlim([bounding_box[0][0], bounding_box[1][0]])
     axes.set_ylim([bounding_box[0][1], bounding_box[1][1]])
 
-def make_line_and_bullets(p1, p2):
-    plt.plot([p1[0], p2[0]], [p1[1], p2[1]], 'b-')
-    plt.axvline(x=p1[0], linestyle="--", color="tab:orange")
-    plt.axvline(x=p2[0], linestyle="--", color="tab:orange")
-    plt.plot(p1[0], p1[1], 'bo', markersize=3)
-    plt.plot(p2[0], p2[1], 'bo', markersize=3)
+def add_line_to_plot(line):
+    plt.plot([line.p.loc[0], line.q.loc[0]], [line.p.loc[1], line.q.loc[1]], 'b-')
 
-def construct_map_plot(lines):
-    for line in lines:
-        make_line_and_bullets(line[0], line[1])
+def add_point_and_bullets_to_plot(point):
+    plt.axvline(x=point.loc[0], linestyle="--", color="tab:orange")
+    plt.plot(point.loc[0], point.loc[1], 'bo', markersize=3)
+
+def create_plot_from_trap_map(trap_map, line_set):
+    if isinstance(trap_map, BeginPoint) or isinstance(trap_map, EndPoint):
+        # Add point to plot
+        add_point_and_bullets_to_plot(trap_map)
+        create_plot_from_trap_map(trap_map.left, line_set)
+        create_plot_from_trap_map(trap_map.right, line_set)
+    elif isinstance(trap_map, Segment):
+        # Add segment to plot/line_set, check to see if segment already added
+        if trap_map not in line_set:
+            add_line_to_plot(trap_map)
+            line_set.append(trap_map)
+        create_plot_from_trap_map(trap_map.above, line_set)
+        create_plot_from_trap_map(trap_map.below, line_set)
+
+def construct_map_plot(trap_map):
+    create_plot_from_trap_map(trap_map, [])
     try:
         plt.show()
     except:
@@ -216,7 +235,7 @@ def main():
         trap_map = construct_trapezoidal_map(lines, bound_box)
         # Begin CLI
         cli_point_locate_prompt(trap_map)
-        construct_map_plot(lines)
+        construct_map_plot(trap_map)
     else:
         print_usage()
 
