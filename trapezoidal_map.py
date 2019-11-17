@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-next_point = 1
-next_segment = 1
+next_point = 0
+next_segment = 0
 
 class Trapezoid:
     def __init__(self, left_p, right_p, above_seg, below_seg, parent):
@@ -107,6 +107,31 @@ def construct_trapezoidal_map(lines, bound_box):
     # TODO
     for line in lines:
         print("Adding " + str(line))
+
+        # Get trapezoids that contain P and Q
+        t_p = locate_point(line[0])
+        t_q = locate_point(line[1])
+
+        next_point += 1 #update global counter
+
+
+        p = BeginPoint(line[0][0], line[0][1], t_p.parent, next_point)
+        # Add trapezoid for P.left
+
+
+        # Check if t_p and t_q are the same
+        if t_p == t_q:
+            # P will be Q's parent
+            q = BeginPoint(line[1][0], line[1][1], p, next_point)
+
+        else:
+            # P and Q have different parents
+            q = BeginPoint(line[1][0], line[1][1], t_q.parent, next_point)
+
+            # Add segment for P.right
+
+
+
 
     # ALGORITHM:
     # Insert new segment:
