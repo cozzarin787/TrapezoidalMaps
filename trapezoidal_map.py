@@ -9,6 +9,44 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
+next_point = 1
+next_segment = 1
+
+class Segment:
+
+    def __init__(self, left_point, right_point):
+        self.p = left_point
+        self.q = right_point
+        name = "S" + str(next_segment)
+        next_segment += 1
+        self.m = (self.q.y - self.p.y) / (self.q.x - self.p.x)
+        self.b = (self.p.y - (self.p.x * self.m))
+
+    def getY(self, x):
+        return m*x + b
+
+
+class BeginPoint:
+    bullet_upper = 100
+    bullet_lower = 0
+
+    def __init__(self, x, y):
+        self.loc = [x, y]
+        name = "P" + str(next_point)
+        next_point += 1
+
+class EndPoint:
+    bullet_upper = 100
+    bullet_lower = 0
+    loc = []
+    name = ""
+
+    def __init__(self, x, y):
+        self.loc = [x, y]
+        name = "Q" + str(next_point)
+        next_point += 1
+
+
 def set_figure_size(bounding_box):
     axes = plt.gca()
     axes.set_xlim([bounding_box[0][0], bounding_box[1][0]])
