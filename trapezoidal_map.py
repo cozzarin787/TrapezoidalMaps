@@ -104,32 +104,75 @@ def cli_point_locate_prompt(trap_map):
     return
 
 def construct_trapezoidal_map(lines, bound_box):
-    # TODO
+    bb_top_p = BeginPoint(bound_box[0][0], bound_box[1][1], None, 0)
+    bb_top_q = EndPoint(bound_box[1][0], bound_box[1][1], None, 0)
+    bb_bot_p = BeginPoint(bound_box[0][0], bound_box[0][1], None, 0)
+    bb_bot_q = EndPoint(bound_box[1][0], bound_box[0][1], None, 0)
+    bb_top_s = Segment(bb_top_p, bb_top_q, None, 0)
+    bb_bot_s = Segment(bb_bot_p, bb_bot_q, None, 0)
+    trap_map = Trapezoid(bb_bot_p, bb_top_q, bb_top_s, bb_bot_s, None)
+
     for line in lines:
         print("Adding " + str(line))
 
         # Get trapezoids that contain P and Q
-        t_p = locate_point(line[0])
-        t_q = locate_point(line[1])
+        t_p = locate_point(line[0], trap_map)
+        t_q = locate_point(line[1], trap_map)
 
-        next_point += 1 #update global counter
-
-
-        p = BeginPoint(line[0][0], line[0][1], t_p.parent, next_point)
-        # Add trapezoid for P.left
+        next_point += 1 #update global counters
+        next_segment += 1
 
 
-        # Check if t_p and t_q are the same
+        
+        # CASE 2: Both endpoints are in the same trapezoid
         if t_p == t_q:
             # P will be Q's parent
+            p = BeginPoint(line[0][0], line[0][1], t_p.parent, next_point)
             q = BeginPoint(line[1][0], line[1][1], p, next_point)
+            s = Segment(p, q, None, next_segment)
 
+            # Add trapezoid for P.left
+            p.left = Trapezoid(t_p.left_point, p, t_p.above_segment, t_p.below_segment, p)
+
+            # Add trapezoid for Q.right
+            q.right = Trapezoid(q, t_q.right_point, t_p.above_segment, t_p.below_segment, q)
+
+            # Add S as Q.left
+            q.left = s
+
+            # Add trapezoids for S left and right
+            s.above = Trapezoid(p, q, t_p.above_segment, s, s)
+            s.below = Trapezoid(p, q, s, t_p.below_segment, s)
+            
+            if t_p == None:
+                # P is the new root
+                trap_map = p
         else:
+            # DO CASE 1 FOR BOTH ENDPOINTS
             # P and Q have different parents
             q = BeginPoint(line[1][0], line[1][1], t_q.parent, next_point)
 
             # Add segment for P.right
 
+            # TEST FOR CASE 3
+
+        # Update bullet paths for P and Q
+        if t_p.isTopBoundingTrap():
+            p.bullet_upper = bound_box[1][1]
+        else:
+            p.bullet_upper = t_p.above_segment.getY(p.loc[0])
+        if t_q.isTopBoundingTrap():
+            q.bullet_upper = bound_box[1][1]
+        else:
+            q.bullet_upper = t_q.above_segment.getY(q.loc[0])
+        if t_p.isBottomBoundingTrap():
+            p.bullet_lower = bound_box[0][1]
+        else:
+            p.bullet_lower = t_p.below_segment.getY(p.loc[0])
+        if t_q.isBottomBoundingTrap():
+            q.bullet_lower = bound_box[0][1]
+        else:
+            q.bullet_lower = t_q.below_segment.getY(q.loc[0])
 
 
 
