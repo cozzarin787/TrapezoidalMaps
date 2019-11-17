@@ -45,14 +45,13 @@ class Trapezoid:
             return False
 
 class Segment:
-    def __init__(self, left_point, right_point, parent):
+    def __init__(self, left_point, right_point, parent, next_seg):
         self.parent = parent
         self.above = None
         self.below = None
         self.p = left_point
         self.q = right_point
-        name = "S" + str(next_segment)
-        next_segment += 1
+        name = "S" + str(next_seg)
         self.m = (self.q.y - self.p.y) / (self.q.x - self.p.x)
         self.b = (self.p.y - (self.p.x * self.m))
 
@@ -64,25 +63,23 @@ class BeginPoint:
     bullet_upper = 100
     bullet_lower = 0
 
-    def __init__(self, x, y, parent):
+    def __init__(self, x, y, parent, next_pt):
         self.parent = parent
         self.left = None
         self.right = None
         self.loc = [x, y]
-        name = "P" + str(next_point)
-        next_point += 1
+        name = "P" + str(next_pt)
 
 class EndPoint:
     bullet_upper = 100
     bullet_lower = 0
 
-    def __init__(self, x, y, parent):
+    def __init__(self, x, y, parent, next_pt):
         self.parent = parent
         self.left = None
         self.right = None
         self.loc = [x, y]
-        name = "Q" + str(next_point)
-        next_point += 1
+        name = "Q" + str(next_pt)
 
 def cli_point_locate_prompt(trap_map):
     exit_commands = ["quit", "q", "exit", "e"]
@@ -108,7 +105,8 @@ def cli_point_locate_prompt(trap_map):
 
 def construct_trapezoidal_map(lines, bound_box):
     # TODO
-
+    for line in lines:
+        print("Adding " + str(line))
 
     # ALGORITHM:
     # Insert new segment:
