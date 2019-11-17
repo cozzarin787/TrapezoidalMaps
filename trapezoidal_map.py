@@ -139,6 +139,9 @@ def construct_trapezoidal_map(lines, bound_box):
             # Add S as Q.left
             q.left = s
 
+            # Add q to the right of p
+            p.right = q
+
             # Add trapezoids for S left and right
             s.above = Trapezoid(p, q, t_p.above_segment, s, s)
             s.below = Trapezoid(p, q, s, t_p.below_segment, s)
