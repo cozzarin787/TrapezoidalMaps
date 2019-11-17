@@ -140,8 +140,29 @@ def construct_trapezoidal_map(lines, bound_box):
     return []
 
 def locate_point(point, trap_map):
-    # TODO
-    return []
+    if trap_map == None:
+        print("Error: Trap Map is None")
+        return
+
+    elif isinstance(trap_map, BeginPoint) or isinstance(trap_map, EndPoint):
+        # Check to see if point is to the left or right of the given point
+        if point[0] <= trap_map.loc[0]:
+            locate_point(point, trap_map.left)
+        else:
+            locate_point(point, trap_map.right)
+
+    elif isinstance(trap_map, Segment):
+        # Check to see if point is above or below the given segment
+        if point[1] >= trap_map.getY(point[0]):
+            locate_point(point, trap_map.above)
+        else:
+            locate_point(point, trap_map.below)
+
+    elif isinstance(trap_map, Trapezoid):
+        return trap_map
+    
+    else:
+        print("Error, unknown node type")
 
 def set_figure_size(bounding_box):
     axes = plt.gca()
