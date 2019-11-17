@@ -13,11 +13,12 @@ next_point = 1
 next_segment = 1
 
 class Trapezoid:
-    def __init__(self, left_p, right_p, above_seg, below_seg):
+    def __init__(self, left_p, right_p, above_seg, below_seg, parent):
         self.left_point = left_p
         self.right_point = right_p
         self.above_segment = above_seg
         self.below_segment = below_seg
+        self.parent = parent
 
     def isLeftBoundingTrap(self):
         if self.left_point == None:
@@ -44,8 +45,10 @@ class Trapezoid:
             return False
 
 class Segment:
-
-    def __init__(self, left_point, right_point):
+    def __init__(self, left_point, right_point, parent):
+        self.parent = parent
+        self.above = None
+        self.below = None
         self.p = left_point
         self.q = right_point
         name = "S" + str(next_segment)
@@ -61,7 +64,10 @@ class BeginPoint:
     bullet_upper = 100
     bullet_lower = 0
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, parent):
+        self.parent = parent
+        self.left = None
+        self.right = None
         self.loc = [x, y]
         name = "P" + str(next_point)
         next_point += 1
@@ -70,7 +76,10 @@ class EndPoint:
     bullet_upper = 100
     bullet_lower = 0
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, parent):
+        self.parent = parent
+        self.left = None
+        self.right = None
         self.loc = [x, y]
         name = "Q" + str(next_point)
         next_point += 1
@@ -99,31 +108,7 @@ def cli_point_locate_prompt(trap_map):
 
 def construct_trapezoidal_map(lines, bound_box):
     # TODO
-    # Data Structures:
-        # Vertices need bullet info as well as the actual point data:
-        # - Vertice of segment
-        # - Top bullet path SEGMENT (vertice -> first intersection)
-        # - Bottom bullet path SEGMENT (vertice -> first intersection)
-        
-        # Trapezoid is made up of:
-        # - Top Segment
-        # - Bottom Segment
-        # - Bounding vertex on the left
-        # - Bounding vertex on the right
 
-        # X Internal Node (P NODE):
-        # - Point p (endpoint of one line segment)
-        # - Top bullet path SEGMENT (vertice -> segment above)
-        # - Bottom bullet path SEGMENT (vertice -> segment below)
-        # - Two children: 
-        #   - Left: point that lies to the left of the vertical line passying through p
-        #   - Right: point that lies to the right of the vertical line passying through p
-
-        # Y Internal Node (S NODE):
-        # - Line segment s
-        # - Two children:
-        #   - Left: anything ABOVE the line segment
-        #   - Right: anything BELOW the line segment
 
     # ALGORITHM:
     # Insert new segment:
