@@ -9,9 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-next_point = 0
-next_segment = 0
-
 class Trapezoid:
     def __init__(self, left_p, right_p, above_seg, below_seg, parent):
         self.left_point = left_p
@@ -103,6 +100,9 @@ def cli_point_locate_prompt(trap_map):
     return
 
 def construct_trapezoidal_map(lines, bound_box):
+    next_point = 0
+    next_segment = 0
+
     bb_top_p = BeginPoint(bound_box[0][0], bound_box[1][1], None, 0)
     bb_top_q = EndPoint(bound_box[1][0], bound_box[1][1], None, 0)
     bb_bot_p = BeginPoint(bound_box[0][0], bound_box[0][1], None, 0)
