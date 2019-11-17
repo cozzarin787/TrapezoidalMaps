@@ -210,7 +210,7 @@ def construct_trapezoidal_map(lines, bound_box):
     #   - Case Trapezoid:
     #       - Done, this is where we place the start point of the line segment
     # - Repeat above process for end point of segment
-    return []
+    return the_tree
 
 
 def findRightPointAbove(cur, seg):    
