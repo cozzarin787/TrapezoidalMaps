@@ -155,7 +155,7 @@ def construct_trapezoidal_map(lines, bound_box):
         else:
             # CASE 1 FOR BOTH ENDPOINTS since P and Q have different parents
             p = BeginPoint(line[0][0], line[0][1], t_p.parent, next_point)
-            q = BeginPoint(line[1][0], line[1][1], t_q.parent, next_point)
+            q = EndPoint(line[1][0], line[1][1], t_q.parent, next_point)
 
             # Add segment for P.right
             s = Segment(p, q, p, next_segment)
