@@ -28,8 +28,8 @@ class Segment:
         self.p = left_point
         self.q = right_point
         self.name = "S" + str(next_seg)
-        self.m = (self.q.y - self.p.y) / (self.q.x - self.p.x)
-        self.b = (self.p.y - (self.p.x * self.m))
+        self.m = (self.q.loc[1] - self.p.loc[1]) / (self.q.loc[0] - self.p.loc[0])
+        self.b = (self.p.loc[1] - (self.p.loc[0] * self.m))
 
     def getY(self, x):
         return self.m*x + self.b
