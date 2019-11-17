@@ -39,6 +39,7 @@ class Segment:
             return self.name == other.name
         else:
             return False
+
     def replaceChild(self, oldChild, newChild):
         if self.above == oldChild:
             self.above = newChild
@@ -142,7 +143,7 @@ def construct_trapezoidal_map(lines, bound_box):
             s.above = Trapezoid(p, q, t_p.above_segment, s, s)
             s.below = Trapezoid(p, q, s, t_p.below_segment, s)
 
-            if t_p == None:
+            if t_p.parent is None:
                 # P is the new root
                 the_tree = p
             else:
