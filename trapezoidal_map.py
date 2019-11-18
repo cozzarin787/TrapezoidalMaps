@@ -104,7 +104,7 @@ def construct_trapezoidal_map(lines, bound_box):
 
     for line in lines:
         print("Adding " + str(line))
-
+        construct_map_plot(the_tree)
         # Get trapezoids that contain P and Q
         t_p = locate_point(line[0], the_tree)
         t_q = locate_point(line[1], the_tree)
@@ -146,42 +146,68 @@ def construct_trapezoidal_map(lines, bound_box):
             # CASE 1 FOR BOTH ENDPOINTS since P and Q have different parents
             p = BeginPoint(line[0][0], line[0][1], t_p.parent, next_point)
             q = EndPoint(line[1][0], line[1][1], t_q.parent, next_point)
+            t_p.parent.replaceChild(t_p, p)
+            t_q.parent.replaceChild(t_q, q)
 
             # Add segment for P.right
             s = Segment(p, q, p, next_segment)
             p.right = s
 
-            # Add the new elements to the tree (at least for the ends, there might be more spots)
-
             # Add Trapezoid for P.left
-            p.left = Trapezoid(t_p.right_point, p, t_p.above_segment, t_p.below_segment, p)
+            p.left = Trapezoid(t_p.left_point, p, t_p.above_segment, t_p.below_segment, p)
 
-            # Add Trapezoids for S.left and S.right
+            # Add Trapezoids for S.above and S.below
             if isinstance(t_p.parent, BeginPoint) and t_p.parent.loc[1] >= s.getY(t_p.parent.loc[0]):
                 s.above = Trapezoid(p, t_p.parent, t_p.above_segment, s, s)
-                t_p.parent.bullet_lower = s.getY(t_p.parent.loc[0])
+                t_p.right_point.bullet_lower = s.getY(t_p.parent.loc[0])
                 s.below = Trapezoid(p, findRightPointBelow(the_tree, s), t_p.above_segment, s, s)
 
             elif isinstance(t_p.parent, BeginPoint) and t_p.parent.loc[1] < s.getY(t_p.parent.loc[0]):
                 s.above = Trapezoid(p, findRightPointAbove(the_tree, s), t_p.above_segment, s, s)
-                s.below =Trapezoid(p, t_p.parent, t_p.below_segment, s, s)
-                t_p.parent.bullet_upper = s.getY(t_p.parent.loc[0])
+                s.below = Trapezoid(p, t_p.parent, s, t_p.below_segment, s)
+                t_p.right_point.bullet_upper = s.getY(t_p.parent.loc[0])
 
             elif isinstance(t_p.parent, Segment) and p.loc[1] >= t_p.parent.getY(p.loc[0]):
                 s.above = Trapezoid(p, findRightPointAbove(the_tree, s), t_p.above_segment, s, s)
                 s.below = Trapezoid(p, t_p.right_point, s, t_p.below_segment, s)   # may need to add more to find right point
-            
+                t_p.right_point.bullet_upper = s.getY(t_p.right_point.loc[0])
+
+            elif isinstance(t_p.parent, Segment) and p.loc[1] < t_p.parent.getY(p.loc[0]):
+                s.above = Trapezoid(p, t_p.right_point, t_p.above_segment, s, s)   # may need to add more to find right point
+                t_p.right_point.bullet_lower = s.getY(t_p.right_point.loc[0])
+                s.below = Trapezoid(p, findRightPointBelow(the_tree, s), s, t_p.below_segment, s)
+
 
             # Add segment for Q.left
             s = Segment(p, q, q, next_segment)
             q.left = s
 
             # Add Trapezoid for Q.right
+            q.right = Trapezoid(q, t_q.right_point, t_q.above_segment, t_q.below_segment, q)
 
-            # Add Trapezoids for S.left and S.right
+            # Add Trapezoids for S.above and S.below
+            if isinstance(t_q.parent, EndPoint) and t_q.parent.loc[1] >= s.getY(t_q.parent.loc[0]):
+                s.above = Trapezoid(p, t_q.parent, t_q.above_segment, s, s)
+                t_q.left_point.bullet_lower = s.getY(t_q.parent.loc[0])
+                s.below = Trapezoid(p, findLeftPointBelow(the_tree, s), t_q.above_segment, s, s)
 
+            elif isinstance(t_q.parent, EndPoint) and t_q.parent.loc[1] < s.getY(t_q.parent.loc[0]):
+                s.above = Trapezoid(p, findLeftPointAbove(the_tree, s), t_q.above_segment, s, s)
+                s.below = Trapezoid(p, t_q.parent, t_q.below_segment, s, s)
+                t_q.left_point.bullet_upper = s.getY(t_q.parent.loc[0])
+
+            elif isinstance(t_q.parent, Segment) and p.loc[1] >= t_q.parent.getY(p.loc[0]):
+                s.above = Trapezoid(p, findLeftPointAbove(the_tree, s), t_q.above_segment, s, s)
+                s.below = Trapezoid(p, t_q.left_point, s, t_q.below_segment, s)   # may need to add more to find right point
+                t_q.left_point.bullet_upper = s.getY(t_q.left_point.loc[0])
+
+            elif isinstance(t_q.parent, Segment) and p.loc[1] < t_q.parent.getY(p.loc[0]):
+                s.above = Trapezoid(p, t_q.left_point, t_q.above_segment, s, s)   # may need to add more to find right point
+                s.below = Trapezoid(p, findLeftPointBelow(the_tree, s), s, t_q.below_segment, s)
+                t_q.left_point.bullet_lower = s.getY(t_q.left_point.loc[0])
 
             # TEST FOR CASE 3   :(
+            
 
         # Update bullet paths for P and Q
         p.bullet_upper = t_p.above_segment.getY(p.loc[0])
@@ -190,6 +216,69 @@ def construct_trapezoidal_map(lines, bound_box):
         q.bullet_lower = t_q.below_segment.getY(q.loc[0])
 
     return the_tree
+
+
+def findLeftPointAbove(cur, seg):    
+    # ANY POINT IS FAIR GAME
+    if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
+        # if p.x > pi.x
+        if seg.p.loc[0] > cur.loc[0]:
+            findLeftPointAbove(cur.right, seg)
+        elif cur == seg.q:
+            return seg.q
+        elif cur == seg.p:
+            return None
+        else:
+            l = findLeftPointAbove(cur.right, seg)
+            r = findLeftPointAbove(cur.left, seg)
+            if cur.loc[1] > seg.getY(cur.loc[0]): #if cur is above seg include it
+                return rightMostPoint(l, r, cur)
+            else:   # otherwise just check l and r
+                return rightMostPoint(l, r)
+    elif isinstance(cur, Segment):
+        if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
+            findLeftPointAbove(cur.above, seg)
+        else:
+            findLeftPointAbove(cur.below, seg)
+    else:
+        # It's a trap!
+        return None
+
+
+def findLeftPointBelow(cur, seg):    
+    # ANY POINT IS FAIR GAME
+    if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
+        # if p.x > pi.x
+        if seg.p.loc[0] > cur.loc[0]:
+            findLeftPointBelow(cur.right, seg)
+        elif cur == seg.q:
+            return seg.q
+        elif cur == seg.p:
+            return None
+        else:
+            l = findLeftPointBelow(cur.right, seg)
+            r = findLeftPointBelow(cur.left, seg)
+            if cur.loc[1] < seg.getY(cur.loc[0]): #if cur is below seg include it
+                return rightMostPoint(l, r, cur)
+            else:   # otherwise just check l and r
+                return rightMostPoint(l, r)
+    elif isinstance(cur, Segment):
+        if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
+            findLeftPointBelow(cur.above, seg)
+        else:
+            findLeftPointBelow(cur.below, seg)
+    else:
+        # cur is a trapezoid, ignore it
+        return None
+
+
+def rightMostPoint(left, right, cur = None):
+    bestPoint = left
+    if (bestPoint is None) or ((not right is None) and (bestPoint.loc[0] > right.loc[0])):
+        bestPoint = right
+    if (bestPoint is None) or ((not cur is None) and (bestPoint.loc[0] > cur.loc[0])):
+        bestPoint = cur
+    return bestPoint
 
 
 def findRightPointAbove(cur, seg):    
@@ -215,15 +304,15 @@ def findRightPointAbove(cur, seg):
         else:
             findRightPointAbove(cur.below, seg)
     else:
-        # cur is a trapezoid, ignore it
+        # It's a trap!
         return None
 
 
 def findRightPointBelow(cur, seg):    
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
-        # if p.x > pi.x
-        if seg.p.loc[0] > cur.loc[0]:
+        # if p.x < pi.x
+        if seg.p.loc[0] < cur.loc[0]:
             findRightPointBelow(cur.right, seg)
         elif cur == seg.q:
             return seg.q
@@ -248,9 +337,10 @@ def findRightPointBelow(cur, seg):
 
 def leftMostPoint(left, right, cur = None):
     bestPoint = left
-    if (not right is None) and (bestPoint.loc[0] < right.loc[0]):
+    # if bp is none OR 
+    if (bestPoint is None) or ((not right is None) and (bestPoint.loc[0] < right.loc[0])):
         bestPoint = right
-    if (not cur is None) and (bestPoint.loc[0] < cur.loc[0]):
+    if (bestPoint is None) or ((not cur is None) and (bestPoint.loc[0] < cur.loc[0])):
         bestPoint = cur
     return bestPoint
 
