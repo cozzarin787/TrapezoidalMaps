@@ -244,11 +244,11 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
         #if new segment is above
         if tree.isAbove(left_point):
             # Shrink high_trap
-            short_high_trap = Trapezoid(high_trap.left_point, high_trap.right_point, tree, high_trap.bottom_segment, high_trap.parent)
+            short_high_trap = Trapezoid(high_trap.left_point, high_trap.right_point, tree, high_trap.below_segment, high_trap.parent)
             blockBullets(tree.above, left_point, right_point, short_high_trap, low_trap, seg_name)
         else:
             # Shrink low_trap
-            short_low_trap = Trapezoid(low_trap.left_point, low_trap.right_point, low_trap.bottom_segment, tree, high_trap.parent)
+            short_low_trap = Trapezoid(low_trap.left_point, low_trap.right_point, low_trap.below_segment, tree, high_trap.parent)
             blockBullets(tree.below, left_point, right_point, high_trap, short_low_trap, seg_name)
 
     else: #tree is a point
@@ -271,8 +271,8 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
                 tree.bullet_upper = s.getY(tree.loc[0])
             else:
                 # Split higher trapezoid and traverse both directions
-                high_trap_left = Trapezoid(high_trap.left_point, tree, high_trap.top_segment, s, s)
-                high_trap_right = Trapezoid(tree, high_trap.right_point, high_trap.top_segment, s, s)
+                high_trap_left = Trapezoid(high_trap.left_point, tree, high_trap.above_segment, s, s)
+                high_trap_right = Trapezoid(tree, high_trap.right_point, high_trap.above_segment, s, s)
                 blockBullets(tree.left, left_point, right_point, high_trap_left, low_trap, seg_name)
                 blockBullets(tree.right, left_point, right_point, high_trap_right, low_trap, seg_name)
                 tree.bullet_lower = s.getY(tree.loc[0])
