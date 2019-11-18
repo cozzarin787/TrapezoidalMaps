@@ -232,18 +232,22 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
         s = Segment(left_point, right_point, tree, seg_name)
         #Determine if new segment should be top of bottom of trapezoid by looking at point
         if s.isAbove(tree.left_point) and s.isAbove(tree.right_point):
-            s.above = None #TODO
+            s.above = high_trap
             s.below = Trapezoid(tree.left_point, tree.right_point, s, tree.below_segment, s)
         elif (not s.isAbove(tree.left_point)) and (not s.isAbove(tree.right_point)):
             s.above = Trapezoid(tree.left_point, tree.right_point, tree.above_segment, s, s)
-            s.below = None #TODO
+            s.below = low_trap
 
     elif isinstance(tree, Segment):
         #if new segment is above
         if tree.isAbove(left_point):
-            blockBullets(tree.above, left_point, right_point, high_trap, low_trap, seg_name)
+            # Shrink high_trap
+            short_high_trap = Trapezoid(high_trap.left_point, high_trap.right_point, tree, high_trap.bottom_segment, high_trap.parent)
+            blockBullets(tree.above, left_point, right_point, short_high_trap, low_trap, seg_name)
         else:
-            blockBullets(tree.below, left_point, right_point, high_trap, low_trap, seg_name)
+            # Shrink low_trap
+            short_low_trap = Trapezoid(low_trap.left_point, low_trap.right_point, low_trap.bottom_segment, tree, high_trap.parent)
+            blockBullets(tree.below, left_point, right_point, high_trap, short_low_trap, seg_name)
 
     else: #tree is a point
         if tree.loc[0] < left_point.loc[0]:
