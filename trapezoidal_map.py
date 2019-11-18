@@ -17,6 +17,18 @@ class Trapezoid:
         self.below_segment = below_seg
         self.parent = parent
 
+    def setName(self, name):
+        self.name = name
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.left_point == other.left_point and \
+                self.right_point == other.right_point and \
+                self.above_segment == other.above_segment and \
+                self.below_segment == other.below_segment
+        else:
+            return False
+
 class Segment:
     def __init__(self, left_point, right_point, parent, next_seg):
         self.parent = parent
@@ -85,28 +97,6 @@ class EndPoint:
             self.left = newChild
         elif self.right == oldChild:
             self.right = newChild
-
-def cli_point_locate_prompt(trap_map):
-    exit_commands = ["quit", "q", "exit", "e"]
-    while True:
-        # Parse input
-        try:
-            input_val = input("Enter a point (x y): ").strip()
-            if input_val not in exit_commands:
-                point = list(map(float, input_val.split(' ')))
-                if len(point) != 2:
-                    print("Error parsing point data, incorrect number of coordinates specified. Expected: x y")
-                else:
-                    result_path = locate_point(point, trap_map)
-                    print(result_path)
-            else:
-                break;
-        except Exception:
-            print("Error parsing point data, make sure x and y coordinates are valid numbers")
-        except KeyboardInterrupt:
-            break;
-    print("\nExiting point location prompt.")
-    return
 
 def construct_trapezoidal_map(lines, bound_box):
     next_point = 0
@@ -384,6 +374,191 @@ def leftMostPoint(left, right, cur = None):
         bestPoint = cur
     return bestPoint
 
+def name_and_count_traps(trap_map, trap_set, cur_b_count, cur_e_count, cur_t_count):
+    if isinstance(trap_map, BeginPoint):
+        left_b_count, left_e_count, cur_t_count = name_and_count_traps(trap_map.left, trap_set, cur_b_count, cur_e_count, cur_t_count)
+        right_b_count, right_e_count, right_t_count = name_and_count_traps(trap_map.right, trap_set, cur_b_count, cur_e_count, cur_t_count)
+        return (left_b_count + right_b_count + 1, left_e_count + right_e_count, right_t_count)
+    elif isinstance(trap_map, EndPoint):
+        left_b_count, left_e_count, cur_t_count = name_and_count_traps(trap_map.left, trap_set, cur_b_count, cur_e_count, cur_t_count)
+        right_b_count, right_e_count, right_t_count = name_and_count_traps(trap_map.right, trap_set, cur_b_count, cur_e_count, cur_t_count)
+        return (left_b_count + right_b_count, left_e_count + right_e_count + 1, right_t_count)
+    elif isinstance(trap_map, Segment):
+        left_b_count, left_e_count, cur_t_count = name_and_count_traps(trap_map.above, trap_set, cur_b_count, cur_e_count, cur_t_count)
+        right_b_count, right_e_count, right_t_count = name_and_count_traps(trap_map.below, trap_set, cur_b_count, cur_e_count, cur_t_count)
+        return (left_b_count + right_b_count, left_e_count + right_e_count, right_t_count)
+    else:
+        if trap_map in trap_set:
+            trap_map.setName(trap_set[trap_set.index(trap_map)].name)
+            return (cur_b_count, cur_e_count, 0)
+        else:
+            trap_map.setName("T"+str(cur_t_count+1))
+            trap_set.append(trap_map)
+            return (cur_b_count, cur_e_count, cur_t_count + 1)
+
+def populate_adjacency_matrix(trap_map, matrix, num_begin_points, num_end_points, num_lines):
+    # Children adjacency addition
+    base_index = -1
+    left_index = -1
+    right_index = -1
+    above_index = -1
+    below_index = -1
+    print(trap_map.name)
+    if isinstance(trap_map, BeginPoint):
+        # Get Base index of current node
+        base_index = int(trap_map.name[1:]) - 1
+        # Get Left Child Index
+        if isinstance(trap_map.left, BeginPoint):
+            left_index = int(trap_map.left.name[1:]) - 1
+        elif isinstance(trap_map.left, EndPoint):
+            left_index = int(trap_map.left.name[1:]) + num_begin_points - 1
+        elif isinstance(trap_map.left, Segment):
+            left_index = int(trap_map.left.name[1:]) + num_begin_points + num_end_points - 1
+        else:
+            left_index = int(trap_map.left.name[1:]) + num_begin_points + num_end_points + num_lines - 1
+        # Get Right Child Index
+        if isinstance(trap_map.right, BeginPoint):
+            right_index = int(trap_map.right.name[1:]) - 1
+        elif isinstance(trap_map.right, EndPoint):
+            right_index = int(trap_map.right.name[1:]) + num_begin_points - 1
+        elif isinstance(trap_map.right, Segment):
+            right_index = int(trap_map.right.name[1:]) + num_begin_points + num_end_points - 1
+        else:
+            right_index = int(trap_map.right.name[1:]) + num_begin_points + num_end_points + num_lines - 1
+
+        # Update Adjacency Matrix
+        matrix[left_index][base_index] = 1
+        matrix[right_index][base_index] = 1
+
+        # Traverse down to the children
+        populate_adjacency_matrix(trap_map.left, matrix, num_begin_points, num_end_points, num_lines)
+        populate_adjacency_matrix(trap_map.right, matrix, num_begin_points, num_end_points, num_lines)
+    elif isinstance(trap_map, EndPoint):
+        # Get Base index of current node
+        base_index = int(trap_map.name[1:]) + num_begin_points - 1
+        # Get Left Child Index
+        if isinstance(trap_map.left, BeginPoint):
+            left_index = int(trap_map.left.name[1:]) - 1
+        elif isinstance(trap_map.left, EndPoint):
+            left_index = int(trap_map.left.name[1:]) + num_begin_points - 1
+        elif isinstance(trap_map.left, Segment):
+            left_index = int(trap_map.left.name[1:]) + num_begin_points + num_end_points - 1
+        else:
+            left_index = int(trap_map.left.name[1:]) + num_begin_points + num_end_points + num_lines - 1
+        # Get Right Child Index
+        if isinstance(trap_map.right, BeginPoint):
+            right_index = int(trap_map.right.name[1:]) - 1
+        elif isinstance(trap_map.right, EndPoint):
+            right_index = int(trap_map.right.name[1:]) + num_begin_points - 1
+        elif isinstance(trap_map.right, Segment):
+            right_index = int(trap_map.right.name[1:]) + num_begin_points + num_end_points - 1
+        else:
+            right_index = int(trap_map.right.name[1:]) + num_begin_points + num_end_points + num_lines - 1
+
+        # Update Adjacency Matrix
+        matrix[left_index][base_index] = 1
+        matrix[right_index][base_index] = 1
+        # Traverse down to the children
+        populate_adjacency_matrix(trap_map.left, matrix, num_begin_points, num_end_points, num_lines)
+        populate_adjacency_matrix(trap_map.right, matrix, num_begin_points, num_end_points, num_lines)
+    elif isinstance(trap_map, Segment):
+        # Get Base index of current node
+        base_index = int(trap_map.name[1:]) + num_begin_points + num_end_points - 1
+        # Get Above Child Index
+        if isinstance(trap_map.above, BeginPoint):
+            above_index = int(trap_map.above.name[1:]) - 1
+        elif isinstance(trap_map.above, EndPoint):
+            above_index = int(trap_map.above.name[1:]) + num_begin_points - 1
+        elif isinstance(trap_map.above, Segment):
+            above_index = int(trap_map.above.name[1:]) + num_begin_points + num_end_points - 1
+        else:
+            above_index = int(trap_map.above.name[1:]) + num_begin_points + num_end_points + num_lines - 1
+        # Get Below Child Index
+        if isinstance(trap_map.below, BeginPoint):
+            below_index = int(trap_map.below.name[1:]) - 1
+        elif isinstance(trap_map.below, EndPoint):
+            below_index = int(trap_map.below.name[1:]) + num_begin_points - 1
+        elif isinstance(trap_map.below, Segment):
+            below_index = int(trap_map.below.name[1:]) + num_begin_points + num_end_points - 1
+        else:
+            below_index = int(trap_map.below.name[1:]) + num_begin_points + num_end_points + num_lines - 1
+        
+        # Update Adjacency Matrix
+        matrix[above_index][base_index] = 1
+        matrix[below_index][base_index] = 1
+
+        # Traverse down to the children
+        populate_adjacency_matrix(trap_map.above, matrix, num_begin_points, num_end_points, num_lines)
+        populate_adjacency_matrix(trap_map.below, matrix, num_begin_points, num_end_points, num_lines)
+    
+def create_adjacency_matrix(trap_map, num_lines):
+    # Parse trap map to get total num of trapezoids
+    num_begin_points, num_end_points, num_traps = name_and_count_traps(trap_map, [], 0, 0, 0)
+    matrix_dim = num_begin_points + num_end_points + num_traps + num_lines
+    matrix = [[0 for x in range(matrix_dim)] for y in range(matrix_dim)] 
+    # Populate matrix with adjacency values
+    populate_adjacency_matrix(trap_map, matrix, num_begin_points, num_end_points, num_lines)
+    # print matrix to file
+    fp = open("output.txt", "w")
+    # header_string = "  "
+    # for i in range(0, matrix_dim+2):
+    #     if i+1 <= num_begin_points:
+    #         header_string += "P" + str(i+1)
+    #     elif i+1 <= num_begin_points+num_end_points:
+    #         header_string += "Q" + str(i+1-num_begin_points)
+    #     elif i+1 <= num_begin_points+num_end_points+num_lines:
+    #         header_string += "S" + str(i+1-num_begin_points-num_end_points)
+    #     else:
+    #         header_string += " T" + str(i+1-num_begin_points-num_end_points-num_lines) + " "
+    row_sum = 0
+    col_sum = 0
+    col_sums = []
+    row_str = ""
+    for i in range(0, matrix_dim):
+        row_sum = 0
+        col_sum = 0
+        row_str = ""
+        for j in range(0, matrix_dim):
+            row_sum += int(matrix[i][j])
+            row_str += str(matrix[i][j]) + " "
+        for j in range(0, matrix_dim):
+            col_sum += int(matrix[j][i])
+        col_sums.append(col_sum)
+        row_str += str(row_sum)
+        print(row_str, file=fp)
+    row_str = ""
+    for i in range(0, matrix_dim):
+        row_str += str(col_sums[i]) + " "
+    print(row_str, file=fp)
+
+    fp.close()
+    
+def cli_point_locate_prompt(trap_map):
+    exit_commands = ["quit", "q", "exit", "e"]
+    while True:
+        # Parse input
+        try:
+            input_val = input("Enter a point (x y): ").strip()
+            if input_val not in exit_commands:
+                point = list(map(float, input_val.split(' ')))
+                if len(point) != 2:
+                    print("Error parsing point data, incorrect number of coordinates specified. Expected: x y")
+                else:
+                    result_path = []
+                    trap = locate_point(point, trap_map)
+                    result_path.append(trap.name)
+                    while trap.parent != None:
+                        trap = trap.parent
+                        result_path.append(trap.name)
+                    print(result_path.reverse())
+            else:
+                break
+        except Exception:
+            print("Error parsing point data, make sure x and y coordinates are valid numbers")
+        except KeyboardInterrupt:
+            break
+    print("\nExiting point location prompt.")
+    return
 
 def locate_point(point, trap_map):
     if trap_map == None:
@@ -471,6 +646,7 @@ def main():
         num_lines, bound_box, lines = parseInput(sys.argv[1])
         set_figure_size(bound_box)
         trap_map = construct_trapezoidal_map(lines, bound_box)
+        create_adjacency_matrix(trap_map, num_lines)
         # Begin CLI
         cli_point_locate_prompt(trap_map)
         construct_map_plot(trap_map)
