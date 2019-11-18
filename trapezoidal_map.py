@@ -31,6 +31,14 @@ class Segment:
     def getY(self, x):
         return self.m*x + self.b
 
+    def isAbove(self, other):
+        if isinstance(other, EndPoint) or isinstance(other, BeginPoint):
+            return self.getY(other.loc[0]) >= other.loc[1]
+        elif isinstance(other, Segment):
+            return self.getY(other.p.loc[0]) >= other.p.loc[1]
+        else:   #Its a trap!
+            return self.getY(other.above_segment.p.loc[0]) >= other.above_segment.p.loc[1]
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.name == other.name
@@ -217,6 +225,7 @@ def construct_trapezoidal_map(lines, bound_box):
                 t_q.left_point.bullet_lower = s.getY(t_q.left_point.loc[0])
 
             # TEST FOR CASE 3   :(
+            the_tree = blockBullets(the_tree, p, q)
             
 
         # Update bullet paths for P and Q
@@ -227,6 +236,27 @@ def construct_trapezoidal_map(lines, bound_box):
 
     return the_tree
 
+
+def blockBullets(tree, left_point, right_point, seg_name):
+    if isinstance(tree, Trapezoid):
+        s = Segment(left_point, right_point, tree, seg_name)
+        #Determine if new segment should be top of bottom of trapezoid by looking at point
+        if s.isAbove(tree.left_point):
+            s.below = Trapezoid(tree.left_point, tree.right_point)
+
+    elif isinstance(tree, Segment):
+        #if new segment is above
+        if tree.isAbove(left_point):
+            blockBullets(tree.above, left_point, right_point)
+        else:
+            blockBullets(tree.below, left_point, right_point)
+    else: #tree is a point
+        #Update bullet paths
+        s = Segment(left_point, right_point, None, 0)    # For calculations, not actually saved in the tree
+        if s.isAbove(tree):
+            tree.bullet_upper = s.getY(tree.loc[0])
+        else:
+            tree.bullet_lower = s.getY(tree.loc[0])
 
 def findLeftPointAbove(cur, seg):    
     # ANY POINT IS FAIR GAME
