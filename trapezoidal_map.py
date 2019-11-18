@@ -277,7 +277,7 @@ def findLeftPointAbove(cur, seg):
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
         # if p.x > pi.x
         if seg.p.loc[0] > cur.loc[0]:
-            findLeftPointAbove(cur.right, seg)
+            return findLeftPointAbove(cur.right, seg)
         elif cur == seg.q:
             return seg.q
         elif cur == seg.p:
@@ -291,9 +291,9 @@ def findLeftPointAbove(cur, seg):
                 return rightMostPoint(l, r)
     elif isinstance(cur, Segment):
         if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
-            findLeftPointAbove(cur.above, seg)
+            return findLeftPointAbove(cur.above, seg)
         else:
-            findLeftPointAbove(cur.below, seg)
+            return findLeftPointAbove(cur.below, seg)
     else:
         # It's a trap!
         return None
@@ -304,7 +304,7 @@ def findLeftPointBelow(cur, seg):
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
         # if p.x > pi.x
         if seg.p.loc[0] > cur.loc[0]:
-            findLeftPointBelow(cur.right, seg)
+            return findLeftPointBelow(cur.right, seg)
         elif cur == seg.q:
             return seg.q
         elif cur == seg.p:
@@ -318,9 +318,9 @@ def findLeftPointBelow(cur, seg):
                 return rightMostPoint(l, r)
     elif isinstance(cur, Segment):
         if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
-            findLeftPointBelow(cur.above, seg)
+            return findLeftPointBelow(cur.above, seg)
         else:
-            findLeftPointBelow(cur.below, seg)
+            return findLeftPointBelow(cur.below, seg)
     else:
         # cur is a trapezoid, ignore it
         return None
@@ -340,7 +340,7 @@ def findRightPointAbove(cur, seg):
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
         # if p.x < pi.x
         if seg.p.loc[0] < cur.loc[0]:
-            findRightPointAbove(cur.right, seg)
+            return findRightPointAbove(cur.right, seg)
         elif cur == seg.q:
             return seg.q
         elif cur == seg.p:
@@ -354,9 +354,9 @@ def findRightPointAbove(cur, seg):
                 return leftMostPoint(l, r)
     elif isinstance(cur, Segment):
         if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
-            findRightPointAbove(cur.above, seg)
+            return findRightPointAbove(cur.above, seg)
         else:
-            findRightPointAbove(cur.below, seg)
+            return findRightPointAbove(cur.below, seg)
     else:
         # It's a trap!
         return None
@@ -367,7 +367,7 @@ def findRightPointBelow(cur, seg):
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
         # if p.x < pi.x
         if seg.p.loc[0] < cur.loc[0]:
-            findRightPointBelow(cur.right, seg)
+            return findRightPointBelow(cur.right, seg)
         elif cur == seg.q:
             return seg.q
         elif cur == seg.p:
@@ -381,9 +381,9 @@ def findRightPointBelow(cur, seg):
                 return leftMostPoint(l, r)
     elif isinstance(cur, Segment):
         if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
-            findRightPointBelow(cur.above, seg)
+            return findRightPointBelow(cur.above, seg)
         else:
-            findRightPointBelow(cur.below, seg)
+            return findRightPointBelow(cur.below, seg)
     else:
         # cur is a trapezoid, ignore it
         return None
