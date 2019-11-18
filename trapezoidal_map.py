@@ -215,7 +215,9 @@ def construct_trapezoidal_map(lines, bound_box):
                 t_q.left_point.bullet_lower = s.getY(t_q.left_point.loc[0])
 
             # CASE 3   :(
-            the_tree = blockBullets(the_tree, p, q, )
+            high_trap = Trapezoid(p, q, bb_top_s, Segment(p, q, None, next_segment), None)
+            low_trap = Trapezoid(p, q, Segment(p, q, None, next_segment), bb_bot_s, None)
+            blockBullets(the_tree, p, q, high_trap, low_trap, next_segment)
             
 
         # Update bullet paths for P and Q
