@@ -214,8 +214,8 @@ def construct_trapezoidal_map(lines, bound_box):
                 s.below = Trapezoid(p, findLeftPointBelow(the_tree, s), s, t_q.below_segment, s)
                 t_q.left_point.bullet_lower = s.getY(t_q.left_point.loc[0])
 
-            # TEST FOR CASE 3   :(
-            the_tree = blockBullets(the_tree, p, q)
+            # CASE 3   :(
+            the_tree = blockBullets(the_tree, p, q, )
             
 
         # Update bullet paths for P and Q
@@ -227,26 +227,50 @@ def construct_trapezoidal_map(lines, bound_box):
     return the_tree
 
 
-def blockBullets(tree, left_point, right_point, seg_name):
+def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
     if isinstance(tree, Trapezoid):
         s = Segment(left_point, right_point, tree, seg_name)
         #Determine if new segment should be top of bottom of trapezoid by looking at point
-        if s.isAbove(tree.left_point):
-            s.below = Trapezoid(tree.left_point, tree.right_point)
+        if s.isAbove(tree.left_point) and s.isAbove(tree.right_point):
+            s.above = None #TODO
+            s.below = Trapezoid(tree.left_point, tree.right_point, s, tree.below_segment, s)
+        elif (not s.isAbove(tree.left_point)) and (not s.isAbove(tree.right_point)):
+            s.above = Trapezoid(tree.left_point, tree.right_point, tree.above_segment, s, s)
+            s.below = None #TODO
 
     elif isinstance(tree, Segment):
         #if new segment is above
         if tree.isAbove(left_point):
-            blockBullets(tree.above, left_point, right_point)
+            blockBullets(tree.above, left_point, right_point, high_trap, low_trap, seg_name)
         else:
-            blockBullets(tree.below, left_point, right_point)
+            blockBullets(tree.below, left_point, right_point, high_trap, low_trap, seg_name)
+
     else: #tree is a point
-        #Update bullet paths
-        s = Segment(left_point, right_point, None, 0)    # For calculations, not actually saved in the tree
-        if s.isAbove(tree):
-            tree.bullet_upper = s.getY(tree.loc[0])
+        if tree.loc[0] < left_point.loc[0]:
+            # Just traverse right
+            blockBullets(tree.right, left_point, right_point, high_trap, low_trap, seg_name)
+        elif tree.loc[0] >= right_point.loc[0]:
+            # Just traverse left
+            blockBullets(tree.left, left_point, right_point, high_trap, low_trap, seg_name)
         else:
-            tree.bullet_lower = s.getY(tree.loc[0])
+            # Split the recursion, traverse both directions
+            #Update bullet paths
+            s = Segment(left_point, right_point, tree.parent, seg_name)    # For calculations, not actually saved in the tree
+            if s.isAbove(tree):
+                # Split lower trapezoid and traverse both directions
+                low_trap_left = Trapezoid(low_trap.left_point, tree, s, low_trap.bottom_segment, s)
+                low_trap_right = Trapezoid(tree, low_trap.right_point, s, low_trap.bottom_segment, s)
+                blockBullets(tree.left, left_point, right_point, high_trap, low_trap_left, seg_name)
+                blockBullets(tree.right, left_point, right_point, high_trap, low_trap_right, seg_name)
+                tree.bullet_upper = s.getY(tree.loc[0])
+            else:
+                # Split higher trapezoid and traverse both directions
+                high_trap_left = Trapezoid(high_trap.left_point, tree, high_trap.top_segment, s, s)
+                high_trap_right = Trapezoid(tree, high_trap.right_point, high_trap.top_segment, s, s)
+                blockBullets(tree.left, left_point, right_point, high_trap_left, low_trap, seg_name)
+                blockBullets(tree.right, left_point, right_point, high_trap_right, low_trap, seg_name)
+                tree.bullet_lower = s.getY(tree.loc[0])
+        
 
 def findLeftPointAbove(cur, seg):    
     # ANY POINT IS FAIR GAME
