@@ -47,7 +47,7 @@ class Segment:
         if isinstance(other, EndPoint) or isinstance(other, BeginPoint):
             return self.getY(other.loc[0]) >= other.loc[1]
         elif isinstance(other, Segment):
-            return self.getY(other.p.loc[0]) >= other.p.loc[1]
+            return self.getY(other.p.loc[0]) >= other.p.loc[1]  #TODO Do we want something more nuanced than this?
         else:   #Its a trap!
             return self.getY(other.above_segment.p.loc[0]) >= other.above_segment.p.loc[1]
 
@@ -283,25 +283,26 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
 def findLeftPointAbove(cur, seg):    
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
-        # if cur.x < q.x
-        if seg.q.loc[0] > cur.loc[0]:
-            return findLeftPointAbove(cur.right, seg)
+        # if cur.x > q.x
+        if cur.loc[0] > seg.q.loc[0]:
+            # Just look left
+            return findLeftPointAbove(cur.left, seg)
         elif cur == seg.q:
-            return seg.q
-        elif cur == seg.p:
             return None
+        elif cur == seg.p:
+            return seg.p
         else:
             l = findLeftPointAbove(cur.right, seg)
             r = findLeftPointAbove(cur.left, seg)
-            if cur.loc[1] > seg.getY(cur.loc[0]): #if cur is above seg include it
+            if not seg.isAbove(cur): #if cur is above seg include it
                 return rightMostPoint(l, r, cur)
             else:   # otherwise just check l and r
                 return rightMostPoint(l, r)
     elif isinstance(cur, Segment):
-        if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
-            return findLeftPointAbove(cur.above, seg)
-        else:
+        if cur.isAbove(seg):
             return findLeftPointAbove(cur.below, seg)
+        else:
+            return findLeftPointAbove(cur.above, seg)
     else:
         # It's a trap!
         return None
@@ -310,25 +311,26 @@ def findLeftPointAbove(cur, seg):
 def findLeftPointBelow(cur, seg):    
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
-        # if cur.x < q.x
-        if seg.q.loc[0] > cur.loc[0]:
-            return findLeftPointBelow(cur.right, seg)
+        # if cur.x > q.x
+        if cur.loc[0] > seg.q.loc[0]:
+            # Just look left
+            return findLeftPointBelow(cur.left, seg)
         elif cur == seg.q:
-            return seg.q
-        elif cur == seg.p:
             return None
+        elif cur == seg.p:
+            return seg.p
         else:
             l = findLeftPointBelow(cur.right, seg)
             r = findLeftPointBelow(cur.left, seg)
-            if cur.loc[1] < seg.getY(cur.loc[0]): #if cur is below seg include it
+            if seg.isAbove(cur): #if cur is below seg include it
                 return rightMostPoint(l, r, cur)
             else:   # otherwise just check l and r
                 return rightMostPoint(l, r)
     elif isinstance(cur, Segment):
-        if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
-            return findLeftPointBelow(cur.above, seg)
-        else:
+        if cur.isAbove(seg):
             return findLeftPointBelow(cur.below, seg)
+        else:
+            return findLeftPointBelow(cur.above, seg)
     else:
         # cur is a trapezoid, ignore it
         return None
@@ -346,8 +348,9 @@ def rightMostPoint(left, right, cur = None):
 def findRightPointAbove(cur, seg):    
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
-        # if p.x < pi.x
-        if seg.p.loc[0] < cur.loc[0]:
+        # if cur.x < p.x
+        if cur.x < seg.p.loc[0]:
+            # Just look right
             return findRightPointAbove(cur.right, seg)
         elif cur == seg.q:
             return seg.q
@@ -356,15 +359,15 @@ def findRightPointAbove(cur, seg):
         else:
             l = findRightPointAbove(cur.right, seg)
             r = findRightPointAbove(cur.left, seg)
-            if cur.loc[1] > seg.getY(cur.loc[0]): #if cur is above seg include it
+            if not seg.isAbove(cur): # if cur is above seg include it
                 return leftMostPoint(l, r, cur)
             else:   # otherwise just check l and r
                 return leftMostPoint(l, r)
     elif isinstance(cur, Segment):
-        if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
-            return findRightPointAbove(cur.above, seg)
-        else:
+        if cur.isAbove(seg):
             return findRightPointAbove(cur.below, seg)
+        else:
+            return findRightPointAbove(cur.above, seg)
     else:
         # It's a trap!
         return None
@@ -373,8 +376,8 @@ def findRightPointAbove(cur, seg):
 def findRightPointBelow(cur, seg):    
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
-        # if p.x < pi.x
-        if seg.p.loc[0] < cur.loc[0]:
+        # if cur.x < p.x
+        if cur.loc[0] < seg.p.loc[0]:
             return findRightPointBelow(cur.right, seg)
         elif cur == seg.q:
             return seg.q
@@ -383,15 +386,15 @@ def findRightPointBelow(cur, seg):
         else:
             l = findRightPointBelow(cur.right, seg)
             r = findRightPointBelow(cur.left, seg)
-            if cur.loc[1] < seg.getY(cur.loc[0]): #if cur is below seg include it
+            if seg.isAbove(cur): #if cur is below seg include it
                 return leftMostPoint(l, r, cur)
             else:   # otherwise just check l and r
                 return leftMostPoint(l, r)
     elif isinstance(cur, Segment):
-        if seg.p.loc[1] > cur.getY(seg.p.loc[0]):
-            return findRightPointBelow(cur.above, seg)
-        else:
+        if cur.isAbove(seg):
             return findRightPointBelow(cur.below, seg)
+        else:
+            return findRightPointBelow(cur.above, seg)
     else:
         # cur is a trapezoid, ignore it
         return None
