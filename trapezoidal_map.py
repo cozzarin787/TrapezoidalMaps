@@ -166,14 +166,14 @@ def construct_trapezoidal_map(lines, bound_box):
 
             # Add Trapezoids for S.above and S.below
             if isinstance(t_p.parent, BeginPoint) and t_p.parent.loc[1] >= s.getY(t_p.parent.loc[0]):
-                s.above = Trapezoid(p, t_p.parent, t_p.above_segment, s, s)
-                t_p.right_point.bullet_lower = s.getY(t_p.parent.loc[0])
-                s.below = Trapezoid(p, findRightPointBelow(the_tree, s), t_p.above_segment, s, s)
+                s.above = Trapezoid(p, t_p.right_point, t_p.above_segment, s, s)
+                t_p.right_point.bullet_lower = s.getY(t_p.right_point.loc[0])
+                s.below = Trapezoid(p, findRightPointBelow(the_tree, s), s, t_p.below_segment, s)
 
             elif isinstance(t_p.parent, BeginPoint) and t_p.parent.loc[1] < s.getY(t_p.parent.loc[0]):
                 s.above = Trapezoid(p, findRightPointAbove(the_tree, s), t_p.above_segment, s, s)
-                s.below = Trapezoid(p, t_p.parent, s, t_p.below_segment, s)
-                t_p.right_point.bullet_upper = s.getY(t_p.parent.loc[0])
+                s.below = Trapezoid(p, t_p.right_point, s, t_p.below_segment, s)
+                t_p.right_point.bullet_upper = s.getY(t_p.right_point.loc[0])
 
             elif isinstance(t_p.parent, Segment) and p.loc[1] >= t_p.parent.getY(p.loc[0]):
                 s.above = Trapezoid(p, findRightPointAbove(the_tree, s), t_p.above_segment, s, s)
@@ -195,29 +195,29 @@ def construct_trapezoidal_map(lines, bound_box):
 
             # Add Trapezoids for S.above and S.below
             if isinstance(t_q.parent, EndPoint) and t_q.parent.loc[1] >= s.getY(t_q.parent.loc[0]):
-                s.above = Trapezoid(p, t_q.parent, t_q.above_segment, s, s)
-                t_q.left_point.bullet_lower = s.getY(t_q.parent.loc[0])
-                s.below = Trapezoid(p, findLeftPointBelow(the_tree, s), t_q.above_segment, s, s)
+                s.above = Trapezoid(t_q.left_point, q, t_q.above_segment, s, s)
+                t_q.left_point.bullet_lower = s.getY(t_q.left_point.loc[0])
+                s.below = Trapezoid(findLeftPointBelow(the_tree, s), q, s, t_q.below_segment, s)
 
             elif isinstance(t_q.parent, EndPoint) and t_q.parent.loc[1] < s.getY(t_q.parent.loc[0]):
-                s.above = Trapezoid(p, findLeftPointAbove(the_tree, s), t_q.above_segment, s, s)
-                s.below = Trapezoid(p, t_q.parent, t_q.below_segment, s, s)
-                t_q.left_point.bullet_upper = s.getY(t_q.parent.loc[0])
+                s.above = Trapezoid(findLeftPointAbove(the_tree, s), q, t_q.above_segment, s, s)
+                s.below = Trapezoid(t_q.left_point, q, s, t_q.below_segment, s)
+                t_q.left_point.bullet_upper = s.getY(t_q.left_point.loc[0])
 
             elif isinstance(t_q.parent, Segment) and p.loc[1] >= t_q.parent.getY(p.loc[0]):
-                s.above = Trapezoid(p, findLeftPointAbove(the_tree, s), t_q.above_segment, s, s)
-                s.below = Trapezoid(p, t_q.left_point, s, t_q.below_segment, s)   # may need to add more to find right point
+                s.above = Trapezoid(findLeftPointAbove(the_tree, s), q, t_q.above_segment, s, s)
+                s.below = Trapezoid(t_q.left_point, q, s, t_q.below_segment, s)   # may need to add more to find right point
                 t_q.left_point.bullet_upper = s.getY(t_q.left_point.loc[0])
 
             elif isinstance(t_q.parent, Segment) and p.loc[1] < t_q.parent.getY(p.loc[0]):
-                s.above = Trapezoid(p, t_q.left_point, t_q.above_segment, s, s)   # may need to add more to find right point
-                s.below = Trapezoid(p, findLeftPointBelow(the_tree, s), s, t_q.below_segment, s)
+                s.above = Trapezoid(t_q.left_point, q, t_q.above_segment, s, s)   # may need to add more to find right point
+                s.below = Trapezoid(findLeftPointBelow(the_tree, s), q, s, t_q.below_segment, s)
                 t_q.left_point.bullet_lower = s.getY(t_q.left_point.loc[0])
 
             # CASE 3   :(
             high_trap = Trapezoid(p, q, bb_top_s, Segment(p, q, None, next_segment), None)
             low_trap = Trapezoid(p, q, Segment(p, q, None, next_segment), bb_bot_s, None)
-            blockBullets(the_tree, p, q, high_trap, low_trap, next_segment)
+            #blockBullets(the_tree, p, q, high_trap, low_trap, next_segment)
             
 
         # Update bullet paths for P and Q
@@ -260,7 +260,7 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
             blockBullets(tree.left, left_point, right_point, high_trap, low_trap, seg_name)
         else:
             # Split the recursion, traverse both directions
-            #Update bullet paths
+            # Update bullet paths
             s = Segment(left_point, right_point, tree.parent, seg_name)    # For calculations, not actually saved in the tree
             if s.isAbove(tree):
                 # Split lower trapezoid and traverse both directions
@@ -420,7 +420,7 @@ def name_and_count_traps(trap_map, trap_set, cur_b_count, cur_e_count, cur_t_cou
     else:
         if trap_map in trap_set:
             trap_map.setName(trap_set[trap_set.index(trap_map)].name)
-            return (cur_b_count, cur_e_count, 0)
+            return (cur_b_count, cur_e_count, cur_t_count)
         else:
             trap_map.setName("T"+str(cur_t_count+1))
             trap_set.append(trap_map)
