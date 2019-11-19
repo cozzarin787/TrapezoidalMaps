@@ -349,7 +349,7 @@ def findRightPointAbove(cur, seg):
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
         # if cur.x < p.x
-        if cur.x < seg.p.loc[0]:
+        if cur.loc[0] < seg.p.loc[0]:
             # Just look right
             return findRightPointAbove(cur.right, seg)
         elif cur == seg.q:
