@@ -577,12 +577,16 @@ def cli_point_locate_prompt(trap_map):
                     print("Error parsing point data, incorrect number of coordinates specified. Expected: x y")
                 else:
                     result_path = []
+                    result_str = ""
                     trap = locate_point(point, trap_map)
                     result_path.append(trap.name)
                     while trap.parent != None:
                         trap = trap.parent
                         result_path.append(trap.name)
-                    print(result_path.reverse())
+                    result_path.reverse()
+                    for node in result_path:
+                        result_str += node + " "
+                    print(result_str)
             else:
                 break
         except Exception:
