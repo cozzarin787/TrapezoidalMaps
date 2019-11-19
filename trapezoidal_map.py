@@ -240,7 +240,7 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
             s.above = Trapezoid(tree.left_point, tree.right_point, tree.above_segment, s, s)
             s.below = low_trap
         # Gotta insert the new segment, but...
-        #tree.parent.replaceChild(tree, s)   # WHY DOES THIS CAUSE THINGS TO BERAK!?! TODO !!!
+        tree.parent.replaceChild(tree, s)   # WHY DOES THIS CAUSE THINGS TO BERAK!?! TODO !!!
 
     elif isinstance(tree, Segment):
         #if new segment is above
@@ -283,8 +283,8 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
 def findLeftPointAbove(cur, seg):    
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
-        # if p.x > pi.x
-        if seg.p.loc[0] > cur.loc[0]:
+        # if cur.x < q.x
+        if seg.q.loc[0] > cur.loc[0]:
             return findLeftPointAbove(cur.right, seg)
         elif cur == seg.q:
             return seg.q
@@ -310,8 +310,8 @@ def findLeftPointAbove(cur, seg):
 def findLeftPointBelow(cur, seg):    
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
-        # if p.x > pi.x
-        if seg.p.loc[0] > cur.loc[0]:
+        # if cur.x < q.x
+        if seg.q.loc[0] > cur.loc[0]:
             return findLeftPointBelow(cur.right, seg)
         elif cur == seg.q:
             return seg.q
