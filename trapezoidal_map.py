@@ -20,6 +20,12 @@ class Trapezoid:
     def setName(self, name):
         self.name = name
 
+    def __str__(self):
+        return "(L:" + str(self.left_point) + \
+               ", R:" + str(self.right_point) + \
+               ", A:" + str(self.above_segment) + \
+               ", B:" + str(self.below_segment) + ")"
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.left_point == other.left_point and \
@@ -39,6 +45,9 @@ class Segment:
         self.name = "S" + str(next_seg)
         self.m = (self.q.loc[1] - self.p.loc[1]) / (self.q.loc[0] - self.p.loc[0])
         self.b = (self.p.loc[1] - (self.p.loc[0] * self.m))
+
+    def __str__(self):
+        return self.name
 
     def getY(self, x):
         return self.m*x + self.b
@@ -75,6 +84,9 @@ class BeginPoint:
         self.loc = [x, y]
         self.name = "P" + str(next_pt)
     
+    def __str__(self):
+        return self.name
+    
     def replaceChild(self, oldChild, newChild):
         if self.left == oldChild:
             self.left = newChild
@@ -91,6 +103,9 @@ class EndPoint:
         self.right = None
         self.loc = [x, y]
         self.name = "Q" + str(next_pt)
+    
+    def __str__(self):
+        return self.name
     
     def replaceChild(self, oldChild, newChild):
         if self.left == oldChild:
@@ -117,6 +132,10 @@ def construct_trapezoidal_map(lines, bound_box):
         t_p = locate_point(line[0], the_tree)
         t_q = locate_point(line[1], the_tree)
 
+        if t_p == None or t_q == None:
+            debugPrintTree(the_tree)
+            print("WE GOT A LIVE ONE HERE!")
+        
         # Update global id counters
         next_point += 1 
         next_segment += 1
@@ -228,10 +247,29 @@ def construct_trapezoidal_map(lines, bound_box):
 
     return the_tree
 
+def debugPrintTree(tree, offset = ""):
+    if tree is None:
+        print(offset + "D'OH!")
+    else:
+        print(offset + str(tree))
+        if len(offset) % 2 == 0:
+            offset = offset + "|"
+        else:
+            offset = offset + " "
+    if isinstance(tree, BeginPoint) or isinstance(tree, EndPoint):
+        print(offset + "left:")
+        debugPrintTree(tree.left, offset)
+        print(offset + "right:")
+        debugPrintTree(tree.right, offset)
+    if isinstance(tree, Segment):
+        print(offset + "above:")
+        debugPrintTree(tree.above, offset)
+        print(offset + "below:")
+        debugPrintTree(tree.below, offset)
 
 def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
     if isinstance(tree, Trapezoid):
-        s = Segment(left_point, right_point, tree, seg_name)
+        s = Segment(left_point, right_point, tree.parent, seg_name)
         #Determine if new segment should be top of bottom of trapezoid by looking at point
         if s.isAbove(tree.left_point) and s.isAbove(tree.right_point):
             s.above = high_trap
@@ -240,7 +278,7 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
             s.above = Trapezoid(tree.left_point, tree.right_point, tree.above_segment, s, s)
             s.below = low_trap
         # Gotta insert the new segment, but...
-        tree.parent.replaceChild(tree, s)   # WHY DOES THIS CAUSE THINGS TO BERAK!?! TODO !!!
+        tree.parent.replaceChild(tree, s)
 
     elif isinstance(tree, Segment):
         #if new segment is above
