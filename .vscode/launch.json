@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["InputFiles/test.txt"]
+            "args": ["InputFiles/jpc4394.txt"]
         }
     ]
 }
