@@ -693,7 +693,7 @@ def cli_point_locate_prompt(trap_map):
     print("\nExiting point location prompt.")
     return
 
-def locate_point(point, trap_map, otherPoint = None):
+def locate_point(point, trap_map):
     if trap_map == None:
         print("Error: Trap Map is None")
         return
@@ -705,18 +705,18 @@ def locate_point(point, trap_map, otherPoint = None):
                 # A duplicate point? Return that bad boy!
                 return trap_map
             else:
-                return locate_point(point, trap_map.left, otherPoint)
+                return locate_point(point, trap_map.left)
         elif point[0] < trap_map.loc[0]:
-            return locate_point(point, trap_map.left, otherPoint)
+            return locate_point(point, trap_map.left)
         else:
-            return locate_point(point, trap_map.right, otherPoint)
+            return locate_point(point, trap_map.right)
 
     elif isinstance(trap_map, Segment):
         # Check to see if point is above or below the given segment
         if point[1] >= trap_map.getY(point[0]):
-            return locate_point(point, trap_map.above, otherPoint)
+            return locate_point(point, trap_map.above)
         else:
-            return locate_point(point, trap_map.below, otherPoint)
+            return locate_point(point, trap_map.below)
 
     elif isinstance(trap_map, Trapezoid):
         return trap_map
