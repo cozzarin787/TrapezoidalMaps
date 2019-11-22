@@ -134,9 +134,6 @@ def construct_trapezoidal_map(lines, bound_box):
         t_p = locate_point(line[0], the_tree)
         t_q = locate_point(line[1], the_tree)
 
-        if t_p == None or t_q == None:
-            print("WE GOT A LIVE ONE HERE!")
-        
         # Update global id counters
         next_point += 1 
         next_segment += 1
@@ -171,18 +168,48 @@ def construct_trapezoidal_map(lines, bound_box):
                 # t_p's parent should abandon t_p and adopt p in its place...
                 t_p.parent.replaceChild(t_p, p)
         else:
+            duplicate_p = False
+            duplicate_q = False
             # CASE 1 FOR BOTH ENDPOINTS since P and Q have different parents
-            p = BeginPoint(line[0][0], line[0][1], t_p.parent, next_point)
-            q = EndPoint(line[1][0], line[1][1], t_q.parent, next_point)
-            t_p.parent.replaceChild(t_p, p)
-            t_q.parent.replaceChild(t_q, q)
+            if isinstance(t_p, BeginPoint) or isinstance(t_p, EndPoint):
+                # P is a duplicate point
+                duplicate_p = True
+                print("P is a duplicate point!")    # Wow, P sure is special
+                p = t_p
+            else:
+                # Normal handling of P
+                p = BeginPoint(line[0][0], line[0][1], t_p.parent, next_point)
+                t_p.parent.replaceChild(t_p, p)
 
-            # Add segment for P.right
-            s = Segment(p, q, p, next_segment)
-            p.right = s
 
-            # Add Trapezoid for P.left
-            p.left = Trapezoid(t_p.left_point, p, t_p.above_segment, t_p.below_segment, p)
+            if isinstance(t_q, BeginPoint) or isinstance(t_q, EndPoint):
+                # Q is a duplicate point...
+                duplicate_q = True
+                print("Q is a duplicate point!")    # Tell the world how special Q is
+                q = t_q
+            else:
+                # Normal handling of Q
+                q = EndPoint(line[1][0], line[1][1], t_q.parent, next_point)
+                t_q.parent.replaceChild(t_q, q)
+                
+                
+
+            if duplicate_p:
+                # Special treatment for P...
+                # Find where the segment is supposed to go
+                t_s = locate_point(line[1], t_p)
+
+                # Add a segment "for P" (which is technically someone else's child)
+                s = Segment(p, q, t_s.parent, next_segment)
+                t_s.parent.replaceChild(t_s, s)
+            else:
+                # Normal handling of P
+                # Add segment for P.right
+                s = Segment(p, q, p, next_segment)
+                p.right = s
+
+                # Add Trapezoid for P.left
+                p.left = Trapezoid(t_p.left_point, p, t_p.above_segment, t_p.below_segment, p)
 
             # Add Trapezoids for S.above and S.below
             if isinstance(t_p.parent, BeginPoint) and t_p.parent.loc[1] >= s.getY(t_p.parent.loc[0]):
@@ -206,12 +233,22 @@ def construct_trapezoidal_map(lines, bound_box):
                 s.below = Trapezoid(p, findRightPointBelow(the_tree, s), s, t_p.below_segment, s)
 
 
-            # Add segment for Q.left
-            s = Segment(p, q, q, next_segment)
-            q.left = s
+            if duplicate_q:
+                # Look at you, fancy duplicate Q...
+                # Find where the segment is supposed to go.
+                t_s = locate_point(line[0], t_q)
 
-            # Add Trapezoid for Q.right
-            q.right = Trapezoid(q, t_q.right_point, t_q.above_segment, t_q.below_segment, q)
+                # Add a segment "for Q" (which is technically someone else's child)
+                s = Segment(p, q, t_s.parent, next_segment)
+                t_s.parent.replaceChild(t_s, s)
+            else:
+                # Normal handling of Q's segment
+                # Add segment for Q.left
+                s = Segment(p, q, q, next_segment)
+                q.left = s
+
+                # Add Trapezoid for Q.right
+                q.right = Trapezoid(q, t_q.right_point, t_q.above_segment, t_q.below_segment, q)
 
             # Add Trapezoids for S.above and S.below
             if isinstance(t_q.parent, EndPoint) and t_q.parent.loc[1] >= s.getY(t_q.parent.loc[0]):
@@ -237,8 +274,6 @@ def construct_trapezoidal_map(lines, bound_box):
             # CASE 3   :(
             high_trap = Trapezoid(p, q, bb_top_s, Segment(p, q, None, next_segment), None)
             low_trap = Trapezoid(p, q, Segment(p, q, None, next_segment), bb_bot_s, None)
-            print("PRE-BB")
-            debugPrintTree(the_tree)
             blockBullets(the_tree, p, q, high_trap, low_trap, next_segment)
             
 
@@ -658,24 +693,30 @@ def cli_point_locate_prompt(trap_map):
     print("\nExiting point location prompt.")
     return
 
-def locate_point(point, trap_map):
+def locate_point(point, trap_map, otherPoint = None):
     if trap_map == None:
         print("Error: Trap Map is None")
         return
 
     elif isinstance(trap_map, BeginPoint) or isinstance(trap_map, EndPoint):
         # Check to see if point is to the left or right of the given point
-        if point[0] <= trap_map.loc[0]:
-            return locate_point(point, trap_map.left)
+        if point[0] == trap_map.loc[0]:
+            if point[1] == trap_map.loc[1]:
+                # A duplicate point? Return that bad boy!
+                return trap_map
+            else:
+                return locate_point(point, trap_map.left, otherPoint)
+        elif point[0] < trap_map.loc[0]:
+            return locate_point(point, trap_map.left, otherPoint)
         else:
-            return locate_point(point, trap_map.right)
+            return locate_point(point, trap_map.right, otherPoint)
 
     elif isinstance(trap_map, Segment):
         # Check to see if point is above or below the given segment
         if point[1] >= trap_map.getY(point[0]):
-            return locate_point(point, trap_map.above)
+            return locate_point(point, trap_map.above, otherPoint)
         else:
-            return locate_point(point, trap_map.below)
+            return locate_point(point, trap_map.below, otherPoint)
 
     elif isinstance(trap_map, Trapezoid):
         return trap_map
