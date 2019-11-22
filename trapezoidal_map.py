@@ -206,16 +206,7 @@ def construct_trapezoidal_map(lines, bound_box):
                 q = EndPoint(line[1][0], line[1][1], t_q.parent, next_point)
                 t_q.parent.replaceChild(t_q, q)
                 
-            if duplicate_p:
-                # Special treatment for P...
-                # Find where the segment is supposed to go
-                t_s = locate_point(line[1], t_p)
-
-                # Add a segment "for P" (which is technically someone else's child)
-                #s = Segment(p, q, t_s.parent, next_segment)
-                #t_s.parent.replaceChild(t_s, s)
-
-            else:
+            if not duplicate_p:
                 # Normal handling of P
                 # Add segment for P.right
                 s = Segment(p, q, p, next_segment)
@@ -246,15 +237,7 @@ def construct_trapezoidal_map(lines, bound_box):
                     s.below = Trapezoid(p, findRightPointBelow(the_tree, s), s, t_p.below_segment, s)
 
 
-            if duplicate_q:
-                # Look at you, fancy duplicate Q...
-                # Find where the segment is supposed to go.
-                t_s = locate_point(line[0], t_q)
-
-                # Add a segment "for Q" (which is technically someone else's child)
-                # s = Segment(p, q, t_s.parent, next_segment)
-                # t_s.parent.replaceChild(t_s, s)
-            else:
+            if not duplicate_q:
                 # Normal handling of Q's segment
                 # Add segment for Q.left
                 s = Segment(p, q, q, next_segment)
@@ -335,7 +318,7 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name, h
                 tree.left_point.bullet_upper = s.getY(tree.left_point.loc[0])
         else:
             above_left = tree.left_point
-            below_left = high_trap.left_point
+            below_left = low_trap.left_point
             if not s.isOn(tree.left_point):
                 tree.left_point.bullet_lower = s.getY(tree.left_point.loc[0])
 
@@ -346,7 +329,7 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name, h
                 tree.right_point.bullet_upper = s.getY(tree.right_point.loc[0])
         else:
             above_right = tree.right_point
-            below_right = high_trap.left_point
+            below_right = low_trap.right_point
             if not s.isOn(tree.right_point):
                 tree.right_point.bullet_lower = s.getY(tree.right_point.loc[0])
 
