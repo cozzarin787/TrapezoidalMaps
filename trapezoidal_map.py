@@ -56,6 +56,9 @@ class Segment:
         if isinstance(other, EndPoint) or isinstance(other, BeginPoint):
             return self.getY(other.loc[0]) > other.loc[1]
         elif isinstance(other, Segment):
+            if self.getY(other.p.loc[0]) == other.p.loc[1]:
+                # check other point
+                return self.getY(other.q.loc[0]) > other.q.loc[1]
             return self.getY(other.p.loc[0]) > other.p.loc[1]
         else:   #Its a trap!
             return self.getY(other.above_segment.p.loc[0]) > other.above_segment.p.loc[1]
@@ -284,7 +287,7 @@ def construct_trapezoidal_map(lines, bound_box):
             # CASE 3   :(
             high_trap = Trapezoid(p, q, bb_top_s, Segment(p, q, None, next_segment), None)
             low_trap = Trapezoid(p, q, Segment(p, q, None, next_segment), bb_bot_s, None)
-            blockBullets(the_tree, p, q, high_trap, low_trap, next_segment)
+            blockBullets(the_tree, p, q, high_trap, low_trap, next_segment, duplicate_p, duplicate_q)
             
 
         # Update bullet paths for P and Q
@@ -320,7 +323,7 @@ def debugPrintTree(tree, offset = ""):
         print(offset + "below:")
         debugPrintTree(tree.below, offset)
 
-def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
+def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name, handleLeftDupes = False, handleRightDupes = False):
     print("blocking at " + str(tree))
     if isinstance(tree, Trapezoid):
         s = Segment(left_point, right_point, tree.parent, seg_name)
@@ -359,21 +362,21 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
         if tree.isAbove(left_point):
             # Shrink high_trap
             short_high_trap = Trapezoid(rightMostPoint(high_trap.left_point, tree.p), leftMostPoint(high_trap.right_point, tree.q), tree, high_trap.below_segment, None)
-            blockBullets(tree.below, left_point, right_point, short_high_trap, low_trap, seg_name)
+            blockBullets(tree.below, left_point, right_point, short_high_trap, low_trap, seg_name, handleLeftDupes, handleRightDupes)
         else:
             # Shrink low_trap
             short_low_trap = Trapezoid(rightMostPoint(low_trap.left_point, tree.p), leftMostPoint(low_trap.right_point, tree.q), low_trap.above_segment, tree, None)
-            blockBullets(tree.above, left_point, right_point, high_trap, short_low_trap, seg_name)
+            blockBullets(tree.above, left_point, right_point, high_trap, short_low_trap, seg_name, handleLeftDupes, handleRightDupes)
 
     else: # tree is a point
-        if tree == left_point or tree == right_point:
-            return  # Don't bother going deeper when we hit our own endpoints.
-        if tree.loc[0] < left_point.loc[0]:
+        if (handleLeftDupes == False and tree == left_point) or (handleRightDupes == False and tree == right_point):
+            return # Don't bother going deeper when we hit our own endpoints
+        if tree.loc[0] <= left_point.loc[0]:
             # Just traverse right
-            blockBullets(tree.right, left_point, right_point, high_trap, low_trap, seg_name)
+            blockBullets(tree.right, left_point, right_point, high_trap, low_trap, seg_name, handleLeftDupes, handleRightDupes)
         elif tree.loc[0] >= right_point.loc[0]:
             # Just traverse left
-            blockBullets(tree.left, left_point, right_point, high_trap, low_trap, seg_name)
+            blockBullets(tree.left, left_point, right_point, high_trap, low_trap, seg_name, handleLeftDupes, handleRightDupes)
         else:
             # Split the recursion, traverse both directions, and update bullet paths
             s = Segment(left_point, right_point, None, "_")    # For calculations, not actually saved in the tree
@@ -381,14 +384,14 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name):
                 # Split lower trapezoid and traverse both directions
                 low_trap_left = Trapezoid(low_trap.left_point, tree, s, low_trap.below_segment, s)
                 low_trap_right = Trapezoid(tree, low_trap.right_point, s, low_trap.below_segment, s)
-                blockBullets(tree.left, left_point, right_point, high_trap, low_trap_left, seg_name)
-                blockBullets(tree.right, left_point, right_point, high_trap, low_trap_right, seg_name)
+                blockBullets(tree.left, left_point, right_point, high_trap, low_trap_left, seg_name, handleLeftDupes, handleRightDupes)
+                blockBullets(tree.right, left_point, right_point, high_trap, low_trap_right, seg_name, handleLeftDupes, handleRightDupes)
             else:
                 # Split higher trapezoid and traverse both directions
                 high_trap_left = Trapezoid(high_trap.left_point, tree, high_trap.above_segment, s, s)
                 high_trap_right = Trapezoid(tree, high_trap.right_point, high_trap.above_segment, s, s)
-                blockBullets(tree.left, left_point, right_point, high_trap_left, low_trap, seg_name)
-                blockBullets(tree.right, left_point, right_point, high_trap_right, low_trap, seg_name)
+                blockBullets(tree.left, left_point, right_point, high_trap_left, low_trap, seg_name, handleLeftDupes, handleRightDupes)
+                blockBullets(tree.right, left_point, right_point, high_trap_right, low_trap, seg_name, handleLeftDupes, handleRightDupes)
         
 
 def findLeftPointAbove(cur, seg):    
