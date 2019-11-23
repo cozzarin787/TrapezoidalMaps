@@ -992,13 +992,14 @@ def create_plot_from_trap_map(trap_map, line_set):
         create_plot_from_trap_map(trap_map.above, line_set)
         create_plot_from_trap_map(trap_map.below, line_set)
 
-def construct_map_plot(trap_map):
+def construct_map_plot(trap_map, bound_box):
     """
     Calls helper function to construct the plot of the trapezoidal map, and tries to display.
     Message shown if display is not avaliable.
     """
     create_plot_from_trap_map(trap_map, [])
     try:
+        set_figure_size(bound_box)
         plt.show()
     except:
         print("No display avaliable. Not displaying pyplot")
@@ -1038,12 +1039,11 @@ def main():
     """
     if len(sys.argv) == 2:
         num_lines, bound_box, lines = parseInput(sys.argv[1])
-        set_figure_size(bound_box)
         trap_map = construct_trapezoidal_map(lines, bound_box)
         create_adjacency_matrix(trap_map, num_lines)
         # Begin CLI
         cli_point_locate_prompt(trap_map)
-        construct_map_plot(trap_map)
+        construct_map_plot(trap_map, bound_box)
     else:
         print_usage()
 
