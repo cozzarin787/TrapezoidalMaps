@@ -997,9 +997,9 @@ def construct_map_plot(trap_map, bound_box):
     Calls helper function to construct the plot of the trapezoidal map, and tries to display.
     Message shown if display is not avaliable.
     """
-    create_plot_from_trap_map(trap_map, [])
     try:
         set_figure_size(bound_box)
+        create_plot_from_trap_map(trap_map, [])
         plt.show()
     except:
         print("No display avaliable. Not displaying pyplot")
