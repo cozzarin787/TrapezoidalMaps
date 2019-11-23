@@ -6,11 +6,31 @@
 """
 
 import matplotlib.pyplot as plt
-import numpy as np
 import sys
 
 class Trapezoid:
+    """
+    This is a class for representing a trapezoid for planar point location
+
+    Attributes:
+        left_point (BeginPoint or EndPoint): the left bounding vertex of the trapezoid
+        right_point (BeginPoint or EndPoint): the right bounding vertex of the trapezoid
+        above_segment (Segment): the upper bounding line of the trapezoid
+        below_segment (Segment): the lower bounding line of the trapezoid
+        parent (BeginPoint, EndPoint, or Segment): parent pointer as part of the graph structure for traversal
+        name (string): name of the trapezoid
+    """
     def __init__(self, left_p, right_p, above_seg, below_seg, parent):
+        """
+        The constructor for Trapezoid class
+
+        Parameters:
+            left_p (BeginPoint or EndPoint): the left bounding vertex of the trapezoid
+            right_p (BeginPoint or EndPoint): the right bounding vertex of the trapezoid
+            above_seg (Segment): the upper bounding line of the trapezoid
+            below_seg (Segment): the lower bounding line of the trapezoid
+            parent (BEginPoint, EndPoint, or Segment): parent pointer as part of the graph structure for traversal
+        """
         self.left_point = left_p
         self.right_point = right_p
         self.above_segment = above_seg
@@ -18,15 +38,36 @@ class Trapezoid:
         self.parent = parent
 
     def setName(self, name):
+        """
+        Set the name of the trapezoid
+
+        Parameters:
+            name (string): name to be assigned to the trapezoid
+        """
         self.name = name
 
     def __str__(self):
+        """
+        ToString function for print the class for debug
+
+        Returns:
+            string: string representation of the Trapezoid class
+        """
         return "(L:" + str(self.left_point) + \
                ", R:" + str(self.right_point) + \
                ", A:" + str(self.above_segment) + \
                ", B:" + str(self.below_segment) + ")"
 
     def __eq__(self, other):
+        """
+        Compares an object with this Trapezoid class to check for equality
+
+        Parameters:
+            other (any): object to check equality with this class
+
+        Returns:
+            Boolean: True if other is equal to this trapezoid, False otherwise
+        """
         if isinstance(other, self.__class__):
             return self.left_point == other.left_point and \
                 self.right_point == other.right_point and \
@@ -36,7 +77,29 @@ class Trapezoid:
             return False
 
 class Segment:
+    """
+    This is a class for representing a line segment for planar point location
+
+    Attributes:
+        parent (BeginPoint, EndPoint, or Segment): parent pointer as part of the graph structure for traversal
+        above (BeginPoint, EndPoint, or Segment): planar point location object that is spatially above this segment
+        below (BeginPoint, EndPoint, or Segment): planar point location object that is spatially below this segment
+        p (BeginPoint): beginning point for this segment or left end point
+        q (EndPoint): ending point for this segment or right end point
+        name (string): name of the segment
+        m (float): slope of the segment
+        b (float): y-intercept of the segment
+    """
     def __init__(self, left_point, right_point, parent, next_seg):
+        """
+        The constructor for Segment class
+
+        Parameters:
+            left_point (BeginPoint): beginning point for this segment or left end point
+            right_point (EndPoint): ending point for this segment or right end point
+            parent (BeginPoint, EndPoint, or Segment): parent pointer as part of the graph structure for traversal
+            next_seg (int): number representing the id of the segment used for constructing the name
+        """
         self.parent = parent
         self.above = None
         self.below = None
@@ -47,12 +110,36 @@ class Segment:
         self.b = (self.p.loc[1] - (self.p.loc[0] * self.m))
 
     def __str__(self):
+        """
+        ToString method for the Segment class (name)
+
+        Returns:
+            string: name of the segment
+        """
         return self.name
 
     def getY(self, x):
+        """
+        Calculates the y that lies on the segment given an x value
+
+        Parameters:
+            x (float): x value to calculate a give y value on the segment
+
+        Returns:
+            float: y coordinate at a given x value on the segment
+        """
         return self.m*x + self.b
 
     def isAbove(self, other):
+        """
+        Given a planar point location object, check to see if it is above the segment
+
+        Parameters: 
+            other (BeginPoint, EndPoint, or Segment): planar point location object to check if it is above
+
+        Returns:
+            Boolean: True if other is above, else False
+        """
         if isinstance(other, EndPoint) or isinstance(other, BeginPoint):
             return self.getY(other.loc[0]) > other.loc[1]
         elif isinstance(other, Segment):
@@ -64,6 +151,15 @@ class Segment:
             return self.getY(other.above_segment.p.loc[0]) > other.above_segment.p.loc[1]
     
     def isOn(self, other):
+        """
+        Given a planar point location object, check to see if it lies on this segment
+
+        Parameters: 
+            other (BeginPoint, EndPoint, or Segment): planar point location object to check if it is on this segment
+
+        Returns:
+            Boolean: True if the other object lies on the segment, False otherwise
+        """
         if isinstance(other, EndPoint) or isinstance(other, BeginPoint):
             return self.getY(other.loc[0]) == other.loc[1]
         elif isinstance(other, Segment):
@@ -72,12 +168,28 @@ class Segment:
             return self.getY(other.above_segment.p.loc[0]) == other.above_segment.p.loc[1]
 
     def __eq__(self, other):
+        """
+        Compares an object with this Segment class to check for equality
+
+        Parameters:
+            other (any): object to check equality with this class
+
+        Returns:
+            Boolean: True if other is equal to this segment, False otherwise
+        """
         if isinstance(other, self.__class__):
             return self.name == other.name
         else:
             return False
 
     def replaceChild(self, oldChild, newChild):
+        """
+        Replaces oldChild with newChild
+
+        Parameters:
+            oldChild (BeginPoint, EndPoint, Segment, or Trapezoid): replaces this child with newChild
+            newChild (BeginPoint, EndPoint, Segment, or Trapezoid): new child to replace oldChild with
+        """
         if self.above == oldChild:
             self.above = newChild
         elif self.below == oldChild:
@@ -85,10 +197,29 @@ class Segment:
 
 
 class BeginPoint:
+    """
+    This is a class for representing a left end point of a segment for planar point location
+
+    Attributes:
+        parent (BeginPoint, EndPoint, or Segment): parent pointer as part of the graph structure for traversal
+        left (BeginPoint, EndPoint, or Segment): planar point location object that is spatially to the left of this point
+        right (BeginPoint, EndPoint, or Segment): planar point location object that is spatially to the right of this point
+        loc (list): x and y coordinate of point
+        name (string): name of the point
+    """
     bullet_upper = 100
     bullet_lower = 0
 
     def __init__(self, x, y, parent, next_pt):
+        """
+        Constructor for the BeginPoint class
+
+        Parameters:
+            x (float): x coordinate of point
+            y (float): y coordinate of point
+            parent (BeginPoint, EndPoint, or Segment): parent pointer as part of the graph structure for traversal
+            next_pt (int): number representing the id of the point used for constructing the name
+        """
         self.parent = parent
         self.left = None
         self.right = None
@@ -96,19 +227,51 @@ class BeginPoint:
         self.name = "P" + str(next_pt)
     
     def __str__(self):
+        """
+        ToString method for the BeginPoint class (name)
+
+        Returns:
+            string: name of the point
+        """
         return self.name
     
     def replaceChild(self, oldChild, newChild):
+        """
+        Replaces oldChild with newChild
+
+        Parameters:
+            oldChild (BeginPoint, EndPoint, Segment, or Trapezoid): replaces this child with newChild
+            newChild (BeginPoint, EndPoint, Segment, or Trapezoid): new child to replace oldChild with
+        """
         if self.left == oldChild:
             self.left = newChild
         elif self.right == oldChild:
             self.right = newChild
 
 class EndPoint:
+    """
+    This is a class for representing a right end point of a segment for planar point location
+
+    Attributes:
+        parent (BeginPoint, EndPoint, or Segment): parent pointer as part of the graph structure for traversal
+        left (BeginPoint, EndPoint, or Segment): planar point location object that is spatially to the left of this point
+        right (BeginPoint, EndPoint, or Segment): planar point location object that is spatially to the right of this point
+        loc (list): x and y coordinate of point
+        name (string): name of the point
+    """
     bullet_upper = 100
     bullet_lower = 0
 
     def __init__(self, x, y, parent, next_pt):
+        """
+        Constructor for the EndPoint class
+
+        Parameters:
+            x (float): x coordinate of point
+            y (float): y coordinate of point
+            parent (BeginPoint, EndPoint, or Segment): parent pointer as part of the graph structure for traversal
+            next_pt (int): number representing the id of the point used for constructing the name
+        """
         self.parent = parent
         self.left = None
         self.right = None
@@ -116,15 +279,40 @@ class EndPoint:
         self.name = "Q" + str(next_pt)
     
     def __str__(self):
+        """
+        ToString method for the EndPoint class (name)
+
+        Returns:
+            string: name of the point
+        """
         return self.name
     
     def replaceChild(self, oldChild, newChild):
+        """
+        Replaces oldChild with newChild
+
+        Parameters:
+            oldChild (BeginPoint, EndPoint, Segment, or Trapezoid): replaces this child with newChild
+            newChild (BeginPoint, EndPoint, Segment, or Trapezoid): new child to replace oldChild with
+        """
         if self.left == oldChild:
             self.left = newChild
         elif self.right == oldChild:
             self.right = newChild
 
 def construct_trapezoidal_map(lines, bound_box):
+    """
+    This function constructs the acyclic graph representing the trapezoidal map. Given line segments
+    and a bounding box, lines are inserted into the graph incrementally, creating the trapezoidal map after
+    all line segments have been added to the map.
+
+    Parameters:
+        lines (list): list of segments represented as a left end point and right end point
+        bound_box (list): list containing lower left and upper right point of the bounding box
+
+    Returns:
+        the root node of the acyclic graph representation of the trapezoidal map
+    """
     duplicate_p = False
     duplicate_q = False # And let's hope they stay this way...
 
@@ -140,9 +328,9 @@ def construct_trapezoidal_map(lines, bound_box):
     the_tree = Trapezoid(bb_bot_p, bb_top_q, bb_top_s, bb_bot_s, None)
 
     for line in lines:
-        print("Adding " + str(line))
-        debugPrintTree(the_tree)
-        construct_map_plot(the_tree)
+        #print("Adding " + str(line))
+        #debugPrintTree(the_tree)
+        #construct_map_plot(the_tree)
         
         # Get trapezoids that contain P and Q
         t_p = locate_point(line[0], the_tree)
@@ -188,7 +376,7 @@ def construct_trapezoidal_map(lines, bound_box):
             if isinstance(t_p, BeginPoint) or isinstance(t_p, EndPoint):
                 # P is a duplicate point
                 duplicate_p = True
-                print("P is a duplicate point!")    # Wow, P sure is special
+                #print("P is a duplicate point!")    # Wow, P sure is special
                 p = t_p
             else:
                 # Normal handling of P
@@ -199,7 +387,7 @@ def construct_trapezoidal_map(lines, bound_box):
             if isinstance(t_q, BeginPoint) or isinstance(t_q, EndPoint):
                 # Q is a duplicate point...
                 duplicate_q = True
-                print("Q is a duplicate point!")    # Tell the world how special Q is
+                #print("Q is a duplicate point!")    # Tell the world how special Q is
                 q = t_q
             else:
                 # Normal handling of Q
@@ -281,12 +469,15 @@ def construct_trapezoidal_map(lines, bound_box):
             q.bullet_upper = t_q.above_segment.getY(q.loc[0])
             q.bullet_lower = t_q.below_segment.getY(q.loc[0])
 
-    print("ALL DONE(?)")
-    debugPrintTree(the_tree)
-    construct_map_plot(the_tree)
+    #print("ALL DONE(?)")
+    #debugPrintTree(the_tree)
+    #construct_map_plot(the_tree)
     return the_tree
 
 def debugPrintTree(tree, offset = ""):
+    """
+    Debug function for printing out a given trapezoidal map
+    """
     if tree is None:
         print(offset + "D'OH!")
     else:
@@ -307,7 +498,10 @@ def debugPrintTree(tree, offset = ""):
         debugPrintTree(tree.below, offset)
 
 def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name, handleLeftDupes = False, handleRightDupes = False):
-    print("blocking at " + str(tree))
+    """
+
+    """
+    #print("blocking at " + str(tree))
     if isinstance(tree, Trapezoid):
         s = Segment(left_point, right_point, tree.parent, seg_name)
         # Determine sides of new trapezoids, trimming bullet paths accordingly
@@ -378,6 +572,10 @@ def blockBullets(tree, left_point, right_point, high_trap, low_trap, seg_name, h
         
 
 def findLeftPointAbove(cur, seg):    
+    """
+    When constructing a trapezoid, this function figures out the left bound vertex relative to
+    the trapezoid above the segment we are looking at
+    """
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
         # if cur.x > q.x
@@ -406,6 +604,10 @@ def findLeftPointAbove(cur, seg):
 
 
 def findLeftPointBelow(cur, seg):    
+    """
+    When constructing a trapezoid, this function figures out the left bound vertex relative to
+    the trapezoid below the segment we are looking at
+    """
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
         # if cur.x > q.x
@@ -434,6 +636,9 @@ def findLeftPointBelow(cur, seg):
 
 
 def rightMostPoint(left, right, cur = None):
+    """
+    compares two points and checks to see which point is the closest to cur, but is to the right as well
+    """
     bestPoint = left
     if (bestPoint is None) or ((not right is None) and (bestPoint.loc[0] < right.loc[0])):
         bestPoint = right
@@ -442,7 +647,11 @@ def rightMostPoint(left, right, cur = None):
     return bestPoint
 
 
-def findRightPointAbove(cur, seg):    
+def findRightPointAbove(cur, seg):   
+    """
+    When constructing a trapezoid, this function figures out the right bound vertex relative to
+    the trapezoid above the segment we are looking at
+    """ 
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
         # if cur.x < p.x
@@ -470,7 +679,11 @@ def findRightPointAbove(cur, seg):
         return None
 
 
-def findRightPointBelow(cur, seg):    
+def findRightPointBelow(cur, seg):  
+    """
+    When constructing a trapezoid, this function figures out the right bound vertex relative to
+    the trapezoid below the segment we are looking at
+    """  
     # ANY POINT IS FAIR GAME
     if isinstance(cur, BeginPoint) or isinstance(cur, EndPoint):
         # if cur.x < p.x
@@ -498,6 +711,9 @@ def findRightPointBelow(cur, seg):
 
 
 def leftMostPoint(left, right, cur = None):
+    """
+    compares two points and checks to see which point is the closest to cur, but is to the left as well
+    """
     bestPoint = left
     # if bp is none OR 
     if (bestPoint is None) or ((not right is None) and (bestPoint.loc[0] > right.loc[0])):
@@ -507,6 +723,10 @@ def leftMostPoint(left, right, cur = None):
     return bestPoint
 
 def name_and_count_traps(trap_map, trap_set, cur_b_count, cur_e_count, cur_t_count):
+    """
+    This function counts the number of BeginPoints, EndPoints (duplicate points will lower the count), and Trapezoids. 
+    As well as, naming each unique trapezoid
+    """
     if isinstance(trap_map, BeginPoint):
         left_b_count, left_e_count, cur_t_count = name_and_count_traps(trap_map.left, trap_set, cur_b_count, cur_e_count, cur_t_count)
         right_b_count, right_e_count, right_t_count = name_and_count_traps(trap_map.right, trap_set, cur_b_count, cur_e_count, cur_t_count)
@@ -529,13 +749,15 @@ def name_and_count_traps(trap_map, trap_set, cur_b_count, cur_e_count, cur_t_cou
             return (cur_b_count, cur_e_count, cur_t_count + 1)
 
 def populate_adjacency_matrix(trap_map, matrix, num_begin_points, num_end_points, num_lines):
+    """
+    This function converts a trapezoidal map (acyclic graph) into an adjacency matrix.
+    """
     # Children adjacency addition
     base_index = -1
     left_index = -1
     right_index = -1
     above_index = -1
     below_index = -1
-    print(trap_map.name)
     if isinstance(trap_map, BeginPoint):
         # Get Base index of current node
         base_index = int(trap_map.name[1:]) - 1
@@ -624,6 +846,10 @@ def populate_adjacency_matrix(trap_map, matrix, num_begin_points, num_end_points
         populate_adjacency_matrix(trap_map.below, matrix, num_begin_points, num_end_points, num_lines)
     
 def create_adjacency_matrix(trap_map, num_lines):
+    """
+    Calls a number of helper functions to name trapezoids, construct an adjacency matrix, and then write the
+    matrix contents to a file.
+    """
     # Parse trap map to get total num of trapezoids
     num_begin_points, num_end_points, num_traps = name_and_count_traps(trap_map, [], 0, 0, 0)
     matrix_dim = num_begin_points + num_end_points + num_traps + num_lines
@@ -632,16 +858,6 @@ def create_adjacency_matrix(trap_map, num_lines):
     populate_adjacency_matrix(trap_map, matrix, num_begin_points, num_end_points, num_lines)
     # print matrix to file
     fp = open("output.txt", "w")
-    # header_string = "  "
-    # for i in range(0, matrix_dim+2):
-    #     if i+1 <= num_begin_points:
-    #         header_string += "P" + str(i+1)
-    #     elif i+1 <= num_begin_points+num_end_points:
-    #         header_string += "Q" + str(i+1-num_begin_points)
-    #     elif i+1 <= num_begin_points+num_end_points+num_lines:
-    #         header_string += "S" + str(i+1-num_begin_points-num_end_points)
-    #     else:
-    #         header_string += " T" + str(i+1-num_begin_points-num_end_points-num_lines) + " "
     row_sum = 0
     col_sum = 0
     col_sums = []
@@ -666,11 +882,15 @@ def create_adjacency_matrix(trap_map, num_lines):
     fp.close()
     
 def cli_point_locate_prompt(trap_map):
+    """
+    This function creates the command line interface where the user can enter a point. The path taken
+    in the acyclic graph representation of the trapezoidal map is returned to the user.
+    """
     exit_commands = ["quit", "q", "exit", "e"]
     while True:
         # Parse input
         try:
-            input_val = input("Enter a point (x y): ").strip()
+            input_val = input("Enter a point (x y) Type quit to exit: ").strip()
             if input_val not in exit_commands:
                 point = list(map(float, input_val.split(' ')))
                 if len(point) != 2:
@@ -697,6 +917,9 @@ def cli_point_locate_prompt(trap_map):
     return
 
 def locate_point(point, trap_map):
+    """
+    Given a point, this function traverses the trapezoidal map, finding the trapezoid the point is in
+    """
     if trap_map == None:
         print("Error: Trap Map is None")
         return
@@ -728,14 +951,23 @@ def locate_point(point, trap_map):
         print("Error, unknown node type")
 
 def set_figure_size(bounding_box):
+    """
+    Sets the size of the plot displayed to the bounding box of the trapezoidal map
+    """
     axes = plt.gca()
     axes.set_xlim([bounding_box[0][0], bounding_box[1][0]])
     axes.set_ylim([bounding_box[0][1], bounding_box[1][1]])
 
 def add_line_to_plot(line):
+    """
+    Adds a line to the plot
+    """
     plt.plot([line.p.loc[0], line.q.loc[0]], [line.p.loc[1], line.q.loc[1]], 'b-')
 
 def add_point_and_bullets_to_plot(point):
+    """
+    Adds a point and its corresponding trimmed bullet paths to the plot
+    """
     # point
     plt.plot(point.loc[0], point.loc[1], 'bo', markersize=3)
      # upper bullet
@@ -744,6 +976,9 @@ def add_point_and_bullets_to_plot(point):
     plt.plot([point.loc[0], point.loc[0]], [point.loc[1], point.bullet_lower], linestyle="--", color="tab:orange")
 
 def create_plot_from_trap_map(trap_map, line_set):
+    """
+    Creates a displayed plot of the entire trapezoidal map
+    """
     if isinstance(trap_map, BeginPoint) or isinstance(trap_map, EndPoint):
         # Add point to plot
         add_point_and_bullets_to_plot(trap_map)
@@ -758,6 +993,10 @@ def create_plot_from_trap_map(trap_map, line_set):
         create_plot_from_trap_map(trap_map.below, line_set)
 
 def construct_map_plot(trap_map):
+    """
+    Calls helper function to construct the plot of the trapezoidal map, and tries to display.
+    Message shown if display is not avaliable.
+    """
     create_plot_from_trap_map(trap_map, [])
     try:
         plt.show()
@@ -765,9 +1004,15 @@ def construct_map_plot(trap_map):
         print("No display avaliable. Not displaying pyplot")
 
 def print_usage():
+    """
+    Prints usage for the program
+    """
     print("usage: python trapezoidal_map.py <fileName>")
 
 def parseInput(filename):
+    """
+    Pase input file containing number of segments, bounding box dimensions, and segment information
+    """
     with open(filename) as f:
         num_lines = int(f.readline().rstrip())
         vals = [int(s) for s in str.split(f.readline().rstrip(), ' ')]
@@ -784,6 +1029,13 @@ def parseInput(filename):
     return num_lines, bound_box, lines
 
 def main():
+    """
+    Entry point of the program, calling all of the higher level functions to 
+        - Create trapezoidal map
+        - Create adjacency matrix representation
+        - Create command line interface for user to do planar point location
+        - Create plot of trapezoidal map and display to user
+    """
     if len(sys.argv) == 2:
         num_lines, bound_box, lines = parseInput(sys.argv[1])
         set_figure_size(bound_box)
